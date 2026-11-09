@@ -1,0 +1,28 @@
+# Apply only to the dedicated clinic TEST project, never to unrelated projects.
+project_id = "clinica-torriceli-testes"
+[auth]
+site_url = "https://clinica-torriceli-previa.pages.dev"
+additional_redirect_urls = ["https://clinica-torriceli-previa.pages.dev/"]
+minimum_password_length = 12
+enable_signup = true
+[auth.email]
+enabled = true
+enable_confirmations = true
+secure_password_change = true
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+[auth.hook.before_user_created]
+enabled = true
+uri = "pg-functions://postgres/public/before_user_created_test_gate"
+
+# SMTP is configured privately in the dashboard. Do not declare or reset its secret here.
+[auth.email.template.invite]
+subject = "Seu convite de acesso — Clínica Torricelli"
+content_path = "./supabase/templates/invite.html"
+[auth.email.template.recovery]
+subject = "Recuperar seu acesso — Clínica Torricelli"
+content_path = "./supabase/templates/recovery.html"
+[auth.email.template.confirmation]
+subject = "Confirme sua conta — Clínica Torricelli"
+content_path = "./supabase/templates/confirmation.html"

@@ -1,0 +1,47 @@
+# Avisos de novas vagas por e-mail — 05/11/2026
+
+Implementação no Supabase dedicado de testes e frontend Cloudflare Pages. O usuário autorizou a integração e escolheu explicitamente **no máximo um aviso por cliente por dia, entre 8h e 20h, em São Paulo**. Aberturas próximas são agrupadas durante cinco minutos; limite global inicial de 50 destinatários/dia, contando reservas duráveis de tentativa, para o teste controlado. Esse limite aparece no painel. WhatsApp permanece em preparação.
+
+Site estável https://clinica-torriceli-previa.pages.dev/ ; deployment desta entrega https://73a64f35.clinica-torriceli-previa.pages.dev/ . Bundle `index-BmR0lXO7.js` verificado por hash com o build local, HTTP200, CSP e noindex preservados. Nenhum endereço pessoal incluído no bundle.
+
+## Resultado e pendência concreta
+
+**Primeiro aviso real validado:** o usuário publicou a abertura da segunda-feira 09/11/2026 em 05/11 às 08h39 (São Paulo). O cron materializou os destinatários elegíveis e aguardou cinco minutos. O Resend aceitou um aviso às 08h45 e o da conta de cliente de teste às 08h46, uma tentativa por mensagem, sem erro. O usuário confirmou no chat que recebeu o aviso por e-mail e autorizou continuar. Essa confirmação é a evidência de recebimento; não foi falsificado `delivered_at`, pois o webhook ainda não está configurado. Nenhum endereço, payload, token ou ID do provedor consta neste relatório.
+
+**Configuração posterior pelo usuário:** após informar que salvou o segredo, a leitura de metadados confirmou `RESEND_API_KEY` presente, sem acessar seu valor. Uma invocação autenticada da função retornou HTTP200/`idle` e registrou `provider_ready=true`; janela de envio vigente e agendamento ativo. Fila e aceites continuam zerados. Isso confirma que o módulo reconhece o segredo e acessa o banco, mas a validade de envio da chave e a entrega serão conferidas na primeira nova publicação feita pelo usuário. `RESEND_WEBHOOK_SECRET` ainda não configurado; entrega por webhook permanece pendente. As notas abaixo sobre ausência de chave descrevem a situação na publicação inicial.
+
+Migração `202611050002_email_notifications.sql` aplicada após dry-run. Função `availability-email` publicada pela API oficial, segredo de invocação gerado e armazenado no Vault/Edge, chamada agendada a cada minuto com pg_cron/pg_net. Apenas o projeto dedicado de testes foi alterado. O servidor recebe a chamada e acessa o banco. Não há chave do Resend configurada para Edge Functions: a chamada autenticada retornou `provider_not_configured`, com **zero mensagens enfileiradas e zero aceitas**, e o painel informa configuração pendente. Nenhum aviso real foi enviado.
+
+O SMTP de autenticação existente continua separado; não foi extraído, copiado ou alterado. O módulo de avisos usa a API Resend. Falta o usuário adicionar `RESEND_API_KEY` em **Supabase → projeto de testes → Edge Functions → Secrets**, com uma chave **Sending access** restrita a `clinicatorricelli.com.br`. Chaves não devem passar pelo chat, frontend ou repositório. A presença da chave permite ao próximo ciclo processar publicações novas elegíveis, dentro da janela escolhida. Não é necessário publicar novamente o site só para cadastrar o segredo.
+
+Para acompanhar entrega/bounce/reclamação, o endpoint `/functions/v1/availability-email/webhook` já está publicado. Configurar no Resend os eventos `email.delivered`, `email.bounced`, `email.complained`, `email.failed` e salvar a assinatura do webhook como `RESEND_WEBHOOK_SECRET` no mesmo local privado. Sem essa configuração o painel distingue somente aceite pela API, sem afirmar entrega; o endpoint recusa eventos sem assinatura configurada/válida. Não inventar segredo nem marcar entregas manualmente.
+
+## Comportamento
+
+- A publicação real da abertura continua produzindo o evento na mesma transação da disponibilidade. Rascunhos, bloqueios e repetição da publicação não produzem avisos duplicados. Publicações anteriores à ativação foram excluídas do disparo; não há envio retroativo do histórico de testes.
+- Enfileira apenas clientes que já tinham consentimento de e-mail na publicação, endereço confirmado e consentimento vinculado ao destino atual. Registro de cadastro e autorização de WhatsApp não autorizam e-mail.
+- Digest privado único por cliente/dia; aberturas antes da primeira tentativa são agrupadas. Publicações após o corpo congelado não mudam a mensagem nem criam um segundo aviso no mesmo dia. Mensagens antigas não são transportadas automaticamente para outro dia: pendências não tentadas expiram; tentativas ambíguas exigem conferência.
+- Antes do HTTP, revalida consentimento, endereço confirmado/inalterado, supressões, janela, cota e todas as datas da mensagem. A retirada de qualquer abertura congelada ou ausência de vagas suprime esse digest, em vez de enviar conteúdo desatualizado. Nenhuma mensagem garante reserva. Reservas/pagamentos seguem desativados.
+- Preparação confirma em transação separada o corpo imutável, token e início da janela de retry. O despacho seguinte segura os mesmos locks de preferência e de disponibilidade durante a chamada HTTP de até oito segundos. Opt-out/alteração de disponibilidade já concluídos impedem o despacho; mensagem aceita pelo provedor pode continuar em trânsito.
+- Chave idempotente estável `availability-email/<delivery_id>`, mesmo JSON em todas as tentativas. No máximo quatro preparações, backoff exponencial, horizonte conservador de 23 horas e proibição de repetir em outro dia. A garantia de idempotência do Resend dura 24 horas; não prometemos entrega exatamente uma vez.
+- 401/403/429 pausam o circuito por uma hora; falhas não expõem resposta bruta, contatos ou credenciais. Aceite sem COMMIT ainda deixa a primeira preparação e o corpo registrados, para repetir a mesma requisição com segurança.
+- Link visível leva à confirmação no Pages com token no fragmento, retirado da barra após carregar. GET não revoga. POST por token opaco e restrito ao destino revoga só e-mail, registra evento e suprime pendências. Cabeçalhos List-Unsubscribe/One-Click atendem ao descadastro pelo provedor. Token antigo não revoga um novo endereço autorizado. WhatsApp e e-mails de autenticação são independentes.
+- Webhooks verificam assinatura Svix sobre bytes originais, tolerância de cinco minutos e tamanho máximo. Persistem somente ID/tipo necessários, deduplicam e reconciliam eventos anteriores ao COMMIT de aceite. Bounce/reclamação/falha suprimem o destino; entrega atrasada não remove supressão.
+
+## Segurança e operação
+
+Fila, payloads, tokens e supressões em schema privado com RLS, sem acesso anon/authenticated/service_role. Worker usa conexão de servidor, não RPC privilegiada no navegador. Endpoint de despacho aceita só o segredo dedicado, nunca destinatário/corpo/ID fornecido pelo cliente. Descadastro tem CORS limitado à origem exata do Pages, sem credenciais de sessão. Webhook aceita apenas assinatura própria. Respostas/logs não imprimem dados privados.
+
+Painel Eduarda exige papel confiável + AAL2 e exibe somente contagens, limites e disponibilidade do serviço. Cliente vê os canais disponíveis, sem acesso à fila de terceiros. Não foram criadas cobranças, gateway, campanha ou WhatsApp Web.
+
+Script confiável de provisionamento: `node scripts/provision-email-notifications.mjs`. Preserva o segredo existente e o corte de ativação, configura um único job pelo nome e não copia credenciais SMTP. Revisar antes de reutilizar em outro ambiente; o script rejeita projetos diferentes do dedicado de testes.
+
+## Validação
+
+- Suíte local completa: **41 testes passaram**, zero falhas/skip. Postgres/PGlite, worker com provedor simulado e vetores Svix: consentimento, troca de endereço, descadastro, limites, payload congelado, erro de rede após aceite, ausência de chave, webhook antecipado/repetido, mudança de disponibilidade e permissões.
+- Cinco testes de integração existentes voltaram a passar no Supabase hospedado: isolamento, administração/MFA, agenda, links de autenticação e gate de cadastro.
+- `supabase/tests/email_notifications.sql` passou no banco hospedado: fixtures sintéticas e alterações de configuração/fila integralmente revertidas por ROLLBACK; nenhum HTTP/SMTP do teste.
+- Função hospedada: chamada sem segredo 401; chamada autorizada sem Resend 503 esperado e acesso ao banco confirmado. GET de descadastro redireciona sem mutação; POST de token inexistente tem resposta genérica; origem não autorizada 403. Agendamento ativo e sem mensagens reais.
+- Build conectado passou e foi examinado contra chaves privilegiadas. Não houve nova automação visual de navegador, pois permanece indisponível; a chegada do aviso real depende da configuração privada e do teste pelo usuário.
+
+Referências oficiais consultadas em 05/11/2026: [Resend idempotência](https://resend.com/docs/dashboard/emails/idempotency-keys), [descadastro](https://resend.com/docs/dashboard/emails/add-unsubscribe-to-transactional-emails), [assinatura de webhooks](https://resend.com/docs/webhooks/verify-webhooks-requests), [Supabase agendamento](https://supabase.com/docs/guides/functions/schedule-functions), [segredos de função](https://supabase.com/docs/guides/functions/secrets), [HTML em funções](https://supabase.com/docs/guides/functions/development-tips). A confirmação HTML fica no Pages porque o domínio compartilhado das Edge Functions reescreve GET HTML para texto simples.

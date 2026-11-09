@@ -1,0 +1,8 @@
+// Runs only against the dedicated project created by this task; no secrets printed/persisted.
+import {spawnSync} from 'node:child_process';import {readFileSync} from 'node:fs';
+const p=JSON.parse(readFileSync('artifacts/project-create-response.json','utf8'));
+if(p.name!=='clinica-torriceli-testes'||p.region!=='sa-east-1'||!/^[a-z]{20}$/.test(p.ref))throw Error('Unrecognized test project');
+const k=spawnSync(process.execPath,['node_modules/supabase/dist/supabase.js','projects','api-keys',`--remote=${p.ref}`,'--reveal','--output-format','json'],{encoding:'utf8'});
+if(k.status!==0)throw Error('Private keys unavailable');const keys=JSON.parse(k.stdout).keys;
+const files=process.argv.slice(2);const r=spawnSync(process.execPath,['--test',...(files.length?files:['tests/integration.mjs','tests/admin.integration.mjs','tests/email-links.integration.mjs','tests/availability.integration.mjs','tests/signup-gate.integration.mjs','tests/client-intake.integration.mjs'])],{encoding:'utf8',env:{...process.env,TEST_SUPABASE_URL:`https://${p.ref}.supabase.co`,TEST_SUPABASE_ANON_KEY:keys.find(k=>k.name==='anon').api_key,TEST_SUPABASE_SERVICE_ROLE_KEY:keys.find(k=>k.name==='service_role').api_key,TEST_ISOLATED_PROJECT_REF:p.ref,TEST_ALLOW_REMOTE_FIXTURES:'true'},timeout:180000});
+let output=(r.stdout||'')+(r.stderr||'');for(const key of keys)if(key.api_key)output=output.replaceAll(key.api_key,'[REDACTED]');console.log(output.replaceAll(p.ref,'[test-project]'));if(r.error||r.signal||r.status===null)throw Error('Hosted integration execution did not complete; no success inferred');process.exit(r.status);
