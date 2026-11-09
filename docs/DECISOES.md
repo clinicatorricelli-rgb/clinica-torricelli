@@ -1,5 +1,7 @@
 # Decisões e continuidade — 04/11/2026
 
+**Decisões do usuário em 09/11/2026 para a futura etapa de reservas (ainda não implementada):** o sinal de 30% será cobrado por **pagamento automático** via empresa de pagamento (provedor ainda a escolher e contratar pelo próprio usuário, com CPF/CNPJ da clínica; não contratar por inferência), e a cliente terá **30 minutos** para pagar antes de a retenção expirar (`hold_minutes=30` quando o fluxo seguro existir). A confirmação continua vindo só do webhook verificado do provedor, nunca do retorno do navegador. Prioridade escolhida para o momento: retomar o **WhatsApp** antes das reservas.
+
 **Atualização 06/11/2026:** entregue ficha de extensão de cílios em homologação para dados fictícios, baseada no PDF do usuário, com parte técnica restrita e revisão por atendimento; ver `FICHA-CLIENTE.md`. Menu Eduarda condicionado ao papel da sessão; vídeo introdutório preparado, aguardando gravação real. WhatsApp comercial deverá permitir atendimento manual mais automação; usuário escolheu lembretes na véspera e duas horas antes (`ATENDIMENTO-WHATSAPP.md`). Conta/portfólio Meta e ativação WhatsApp ainda pendentes. Referências antigas abaixo à ausência completa de ficha, backend/SMTP/notificações são históricas; e-mail real já foi recebido e validado.
 
 ## Disponibilidade confirmada
