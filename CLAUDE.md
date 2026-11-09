@@ -5,7 +5,7 @@ Leia primeiro `docs/HANDOFF-CLAUDE-CODE.md`. Ele consolida o estado da implement
 ## Estado essencial
 
 - Projeto existente em React/Vite + Supabase/Postgres/Auth/Storage; frontend publicado no Cloudflare Pages. Preservar essa infraestrutura.
-- URL estável: https://clinica-torriceli-previa.pages.dev/ . Última publicação validada em 06/11/2026: https://4484cbf7.clinica-torriceli-previa.pages.dev/ . Não houve nova checagem remota no handoff de 09/11.
+- URL estável: https://clinica-torriceli-previa.pages.dev/ . Última publicação validada em 09/11/2026, a primeira feita pelo GitHub Actions (commit `ceceb10`): https://0af4593a.clinica-torriceli-previa.pages.dev/ , com bundle `index-BPV7Af5X.js` idêntico ao da publicação manual de 06/11 (4484cbf7); HTTP200, CSP, noindex e vídeo v4 conferidos.
 - Administração por associação confiável de UUID + MFA/AAL2; menu Eduarda só para a sessão administrativa. Nunca conceder papel por e-mail, metadata ou parâmetro do navegador.
 - Disponibilidade, rascunhos/publicação, bloqueios, cadastro controlado, ficha de extensão de cílios e avisos de novas vagas por e-mail implementados.
 - O usuário confirmou recebimento real dos avisos por e-mail. O cron de envio deve ser tratado como ativo até checagem privada em contrário.
