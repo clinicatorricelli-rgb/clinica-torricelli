@@ -16,7 +16,10 @@ Leia primeiro `docs/HANDOFF-CLAUDE-CODE.md`. Ele consolida o estado da implement
 
 ## Cuidados ao trabalhar
 
-- O repositório está na branch local `master`, sem commits; o código aparece como untracked. Não executar limpeza/reset que apague o trabalho. O alvo de publicação `--branch main` do Pages é independente disso.
+- O usuário não entende de Git nem de terminal: execute você mesmo os comandos, explique resultados em linguagem simples e peça só o que depender dele (login no navegador, dados de conta). Antes de qualquer coisa que altere Supabase, Cloudflare ou envios de e-mail, explique e espere aprovação.
+- Git: branch `main`, repositório privado `clinicatorricelli-rgb/clinica-torricelli` no GitHub (primeiro commit em 09/11/2026). Não executar limpeza/reset que apague trabalho; `artifacts/` e outros arquivos ignorados existem só no computador do escritório.
+- **Publicação automática:** todo push/merge em `main` roda `.github/workflows/publicar-site.yml` (testes locais → build `staging` conectado → `scripts/check-bundle.mjs` → `wrangler pages deploy` no projeto existente `clinica-torriceli-previa`, mesmo endereço). Pull requests só testam e montam, sem publicar. Portanto: trabalhar em branch + PR e só mesclar em `main` o que pode ir ao ar. Voltar versão: painel do Cloudflare Pages → Deployments → Rollback. O fluxo publica apenas o frontend; não altera banco, funções, Auth ou e-mails.
+- Sessões na nuvem (celular/claude.ai) não têm `artifacts/`, login da CLI Supabase nem do Wrangler. Nelas, editar código, rodar testes locais e abrir PR; migrações, funções e scripts do Supabase continuam exigindo o computador do escritório (ou um fluxo próprio a ser criado com aprovação).
 - Nunca imprimir/copiar senhas, tokens, QR/códigos MFA, service-role, SMTP, payloads privados ou dados clínicos para chat, logs, bundle ou documentação. `VITE_*` contém somente configuração pública.
 - Metadados do projeto correto ficam em `artifacts/project-create-response.json`, ignorado pelo Git. Validar nome `clinica-torriceli-testes` e região `sa-east-1` antes de qualquer mutação remota. Existe outro projeto inicial em outra região: preservá-lo.
 - Oito migrações já foram aplicadas. Alterações novas exigem migração nova. Conflitos de ficha são `PT409`/HTTP409; não regredir para `40001`.

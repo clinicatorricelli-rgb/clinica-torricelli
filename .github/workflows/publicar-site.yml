@@ -1,0 +1,72 @@
+# Publicação automática do site no Cloudflare Pages.
+#
+# - Toda mudança enviada para a branch main: testa, monta e publica no projeto
+#   existente clinica-torriceli-previa (mesmo endereço de sempre).
+# - Pull requests: só testa e monta, sem publicar.
+# - "Run workflow" na aba Actions: publica de novo a main sob demanda.
+#
+# Este fluxo NÃO mexe no banco, nas funções, no Auth nem nos envios de e-mail
+# do Supabase: só publica o frontend.
+
+name: Publicar site
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publicar-site-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  testar-e-publicar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Configuração PÚBLICA do frontend: vai para o navegador de qualquer visitante
+      # e já aparece no site publicado. Os dados são protegidos por RLS/MFA no
+      # servidor, não por estes valores. Nunca coloque aqui chave secreta
+      # (sb_secret_/service_role), token sbp_, SMTP, Resend ou webhook.
+      VITE_SUPABASE_URL: https://zpgzndrgsvynfomjqods.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_mGjPJdLM2gnirVgD6tYRTQ_GEpgBmj2
+      # Mostra o formulário de cadastro; quem decide se a conta pode ser criada é o
+      # hook Before User Created no Supabase (cadastro beta restrito).
+      VITE_ENABLE_PUBLIC_SIGNUP: 'true'
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      - name: Instalar pnpm
+        run: npm install -g pnpm@11.25.0
+
+      - name: Instalar dependências (lockfile congelado)
+        run: pnpm install --frozen-lockfile
+
+      - name: Testes locais (sem rede)
+        run: node --test tests/*.test.mjs
+
+      - name: Montar site conectado à homologação
+        run: node node_modules/vite/bin/vite.js build --mode staging
+
+      - name: Conferir montagem e ausência de segredos
+        run: node scripts/check-bundle.mjs
+
+      - name: Publicar no Cloudflare Pages
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: 7decefbd5362da01103cd27abaaaae79
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::error::Falta o segredo CLOUDFLARE_API_TOKEN em Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+          node node_modules/wrangler/bin/wrangler.js pages deploy dist --project-name clinica-torriceli-previa --branch main

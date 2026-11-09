@@ -27,7 +27,7 @@ Workspace principal:
 C:\Users\LUCASCORTS\Documents\ChatGPT\SISTEMA DE AGENDAMENTOS CLINICA
 ```
 
-Inspeção em 09/11: Git na branch local `master`, **sem commits**. Os arquivos do projeto estão untracked. Não há checkout Git remoto publicado confirmado neste handoff. Preservar os arquivos antes de operações de branch/limpeza; `git clean -fdx` apagaria o trabalho e os metadados locais ignorados. Nenhum commit/push foi feito nesta conversa.
+**Atualização 09/11 (Claude Code):** primeiro commit feito e enviado; branch `main` no repositório privado `clinicatorricelli-rgb/clinica-torricelli`. A publicação do frontend passou a ser automática pelo GitHub Actions a cada push em `main` (ver §15). Preservar os arquivos ignorados locais; `git clean -fdx` apagaria os metadados em `artifacts/`.
 
 | Recurso | Estado conhecido |
 | --- | --- |
@@ -353,7 +353,7 @@ node scripts/build-staging.mjs --signup-test
 node node_modules/wrangler/bin/wrangler.js pages deploy dist --project-name clinica-torriceli-previa --branch main --commit-dirty=true
 ```
 
-Wrangler emite aviso de HEAD ausente porque ainda não há commits, mas os deploys registrados terminaram com sucesso. Não recriar o projeto Pages; `--force` foi necessário apenas na criação inicial, não em uploads normais. Não inventar commit só para ocultar o aviso sem decidir a organização Git com o usuário.
+**Desde 09/11 a publicação normal é automática:** `.github/workflows/publicar-site.yml` roda a cada push em `main` (testes locais, build `--mode staging` com URL/chave publicável fixadas no próprio workflow, `scripts/check-bundle.mjs` e `wrangler pages deploy` com o segredo `CLOUDFLARE_API_TOKEN` do GitHub). Pull requests só testam e montam. A montagem do workflow foi comparada com o deploy 4484cbf7 e saiu byte a byte idêntica (`index-BPV7Af5X.js`, `index-C8RNTIgb.css`). O projeto Pages é Direct Upload e não pode ser ligado ao Git pelo painel; por isso o deploy é feito pelo Actions, preservando projeto e URL. Os comandos manuais acima continuam válidos para emergência no computador do escritório, mas evite misturar: o próximo push em `main` substitui o que foi publicado à mão. Não recriar o projeto Pages; `--force` foi necessário apenas na criação inicial.
 
 `public/_headers`: CSP, nosniff, noindex/nofollow/noarchive e outras restrições. Noindex não é controle de acesso. `_redirects`: `/* /index.html 200`.
 

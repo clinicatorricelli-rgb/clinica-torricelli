@@ -1,5 +1,7 @@
 # Prévia publicada — 04/11/2026
 
+**Publicação automática — 09/11/2026:** deploys passam a sair do GitHub Actions (`.github/workflows/publicar-site.yml`) a cada push em `main`, no mesmo projeto e endereço. Detalhes em `HANDOFF-CLAUDE-CODE.md` §15. As instruções manuais abaixo são históricas/emergência.
+
 **Ficha e menu — 06/11/2026:** https://4484cbf7.clinica-torriceli-previa.pages.dev/ ; bundle `index-BPV7Af5X.js`, HTTP200 e hash verificados. Cliente encontra ficha de extensão de cílios em Minha conta, admin/MFA encontra a parte técnica, botão Eduarda restrito à sessão autorizada. Homepage reorganizada. Vídeo inicial aguardando gravação; nenhuma mídia de apresentação inventada. `FICHA-CLIENTE.md` registra 48 testes locais e validação real da API, conflitos409 e acesso cruzado negado. Novas migrações aplicadas somente na homologação dedicada.
 
 **Avisos por e-mail — 05/11/2026:** painel com estado/contagens e página de descadastro publicados em https://73a64f35.clinica-torriceli-previa.pages.dev/ . URL estável mantida; bundle `index-BmR0lXO7.js` confirmado por HTTP/hash. Backend da fila/função/agendamento pronto, sem chave Resend do módulo de avisos e sem envio real. Ver `AVISOS-EMAIL.md` para a pendência e verificações.
