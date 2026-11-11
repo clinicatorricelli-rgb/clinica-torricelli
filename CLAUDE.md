@@ -10,7 +10,7 @@ Leia primeiro `docs/HANDOFF-CLAUDE-CODE.md`. Ele consolida o estado da implement
 - Disponibilidade, rascunhos/publicação, bloqueios, cadastro controlado, ficha de extensão de cílios e avisos de novas vagas por e-mail implementados.
 - O usuário confirmou recebimento real dos avisos por e-mail. O cron de envio deve ser tratado como ativo até checagem privada em contrário.
 - WhatsApp ainda NÃO integrado. App Meta criado, portfólio empresarial bloqueado temporariamente por perfil Facebook novo na última tentativa. Não registrar o número real sem conferir o atendimento manual + API/Coexistência.
-- Reservas/pagamentos NÃO operacionais: `booking_enabled=false` é protegido por CHECK; `hold_minutes` não foi definido. Consulta de horários não reserva atendimento.
+- Reservas NÃO operacionais: `booking_enabled=false` é protegido por CHECK. **Decisão de 11/11/2026: nenhum pagamento no agendamento; o sinal de 30% foi extinto.** No lugar, regra aceita antes de agendar: aviso com menos de 24 h ou falta sem justificativa gera taxa de 30% do serviço, cobrada depois; aviso com mais de 24 h permite remanejar. Banco e testes ainda seguem o desenho antigo do sinal (`deposit_cents`, `held`, `hold_minutes`, `payments`); mudar só por migração nova. Regra, pontos em aberto e recomendações no topo de `docs/DECISOES.md`. Consulta de horários não reserva atendimento.
 - Ficha de anamnese somente com dados fictícios nesta homologação; sem aprovação clínica automática. Produção com dados reais depende de concluir privacidade, termos e retenção.
 - Vídeo de apresentação real ainda não foi enviado. `WelcomePresentation.jsx` está preparado, mas não é ativado sem `VITE_WELCOME_VIDEO`. Preservar o vídeo de resultados v4 existente.
 
