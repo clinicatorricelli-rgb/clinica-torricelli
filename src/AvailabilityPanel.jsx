@@ -1,11 +1,44 @@
-import React,{useEffect,useState} from 'react';import {supabase} from './supabase';import {catalog,money} from './catalog.mjs';
+import React,{useEffect,useState} from 'react';import {supabase} from './supabase';import {catalog,money,lateFee} from './catalog.mjs';
+import {when,reasonMessage,ruleSummary} from './booking.mjs';
 const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 const clock=s=>new Intl.DateTimeFormat('pt-BR',{hour:'2-digit',minute:'2-digit',timeZone:'America/Sao_Paulo'}).format(new Date(s));
-export function AvailabilityPreview({selectedService=1}){
- const [day,setDay]=useState(today),[service,setService]=useState(selectedService),[slots,setSlots]=useState([]),[loading,setLoading]=useState(false),[error,setError]=useState('');
+export function AvailabilityPreview({selectedService=1,session=null,booking=null,onBooked=()=>{},onAccount=()=>{},onRuleChanged=()=>{}}){
+ const [day,setDay]=useState(today),[service,setService]=useState(selectedService),[slots,setSlots]=useState([]),[loading,setLoading]=useState(false),[error,setError]=useState(''),[reload,setReload]=useState(0);
+ const [chosen,setChosen]=useState(null),[accepted,setAccepted]=useState(false),[request,setRequest]=useState(null),[busy,setBusy]=useState(false),[result,setResult]=useState(null);
  useEffect(()=>setService(selectedService),[selectedService]);
- useEffect(()=>{let alive=true;if(!supabase)return;setLoading(true);setError('');supabase.rpc('available_slots',{p_service_id:Number(service),p_day:day}).then(({data,error})=>{if(!alive)return;if(error){setError('Não foi possível consultar os horários.');setSlots([]);}else setSlots(data||[]);setLoading(false);});return()=>{alive=false;};},[day,service]);
- return <section className="availability-preview"><p className="eyebrow">CONSULTA DE DISPONIBILIDADE</p><h2>Encontre seu horário</h2><p>Ambiente de testes. Esta consulta não reserva nem confirma atendimento. Horários de São Paulo.</p><div className="form-grid"><label>Serviço<select value={service} onChange={e=>setService(e.target.value)}>{catalog.map(s=><option key={s.id} value={s.id}>{s.name} · {s.variant} · {s.duration_minutes} min</option>)}</select></label><label>Dia<input type="date" min={today()} value={day} onChange={e=>setDay(e.target.value)}/></label></div>{!supabase?<p>Consulta disponível no ambiente conectado de testes.</p>:loading?<p role="status">Consultando horários…</p>:error?<p role="alert">{error}</p>:slots.length?<><p>{money(slots[0].price_cents)}. Nenhuma cobrança nesta consulta.</p><ul className="slots">{slots.map(s=><li key={s.starts_at}><span>{clock(s.starts_at)}–{clock(s.ends_at)}</span></li>)}</ul></>:<p>Nenhum horário disponível para esse serviço nessa data. Consulta limitada aos próximos 90 dias.</p>}</section>;
+ useEffect(()=>setChosen(null),[day,service]);
+ useEffect(()=>{let alive=true;if(!supabase)return;setLoading(true);setError('');supabase.rpc('available_slots',{p_service_id:Number(service),p_day:day}).then(({data,error})=>{if(!alive)return;if(error){setError('Não foi possível consultar os horários.');setSlots([]);}else setSlots(data||[]);setLoading(false);});return()=>{alive=false;};},[day,service,reload]);
+ const canBook=!!(supabase&&booking?.enabled&&booking.rule);
+ const svc=catalog.find(s=>s.id===Number(service));
+ function choose(slot){setChosen(slot);setAccepted(false);setRequest(crypto.randomUUID());setResult(null);}
+ async function confirm(e){e.preventDefault();if(!chosen||!accepted||busy)return;setBusy(true);setResult(null);
+  try{
+   const {data,error}=await supabase.rpc('book_appointment',{p_service_id:Number(service),p_start:chosen.starts_at,p_rule_version:booking.rule.version,p_request_id:request});
+   if(error)throw error;
+   if(data.ok){setResult({ok:true,text:`Agendamento confirmado: ${svc?.name} · ${svc?.variant}, ${when(data.appointment.starts_at)}. Para remarcar ou cancelar, use Minha conta.`});setChosen(null);onBooked();}
+   else{setResult({ok:false,reason:data.reason,text:reasonMessage(data)});if(data.reason==='rule_changed'){setChosen(null);onRuleChanged();}if(data.reason==='slot_unavailable')setChosen(null);}
+   setReload(v=>v+1);
+  }catch{setResult({ok:false,text:'Não foi possível concluir o agendamento. Confira a conexão e tente de novo.'});}finally{setBusy(false);}
+ }
+ const slotText=s=>`${clock(s.starts_at)}–${clock(s.ends_at)}`;
+ return <section className="availability-preview"><p className="eyebrow">{canBook?'AGENDAMENTO':'CONSULTA DE DISPONIBILIDADE'}</p><h2>Encontre seu horário</h2>
+ <p>{canBook?'Ambiente de testes. Escolha um horário para agendar. Não há pagamento para agendar. Horários de São Paulo.':'Ambiente de testes. Esta consulta não reserva nem confirma atendimento. Horários de São Paulo.'}</p>
+ <div className="form-grid"><label>Serviço<select value={service} onChange={e=>setService(e.target.value)}>{catalog.map(s=><option key={s.id} value={s.id}>{s.name} · {s.variant} · {s.duration_minutes} min</option>)}</select></label><label>Dia<input type="date" min={today()} value={day} onChange={e=>setDay(e.target.value)}/></label></div>
+ {!supabase?<p>Consulta disponível no ambiente conectado de testes.</p>:loading?<p role="status">Consultando horários…</p>:error?<p role="alert">{error}</p>:slots.length?<>
+  <p>{money(slots[0].price_cents)}. {canBook?'Sem pagamento para agendar.':'Nenhuma cobrança nesta consulta.'}{canBook&&svc?.requires_intake?' Este serviço exige a ficha preenchida em Minha conta.':''}</p>
+  <ul className="slots">{slots.map(s=><li key={s.starts_at}>{canBook&&session?<button type="button" aria-pressed={chosen?.starts_at===s.starts_at} onClick={()=>choose(s)}>{slotText(s)}</button>:<span>{slotText(s)}</span>}</li>)}</ul>
+  {canBook&&!session&&<p>Para agendar um destes horários, <button type="button" className="inline-link" onClick={onAccount}>entre em Minha conta</button>.</p>}
+ </>:<p>Nenhum horário disponível para esse serviço nessa data. Consulta limitada aos próximos 90 dias.</p>}
+ {chosen&&canBook&&session&&<form className="booking-confirm" onSubmit={confirm} aria-labelledby="booking-confirm-title">
+  <h3 id="booking-confirm-title">Confirmar agendamento</h3>
+  <p><strong>{svc?.name} · {svc?.variant}</strong><br/>{when(chosen.starts_at)} até {clock(chosen.ends_at)} · {money(chosen.price_cents)}</p>
+  <p className="rule-summary">{ruleSummary(booking.rule,chosen.fee_cents??lateFee(chosen.price_cents))}</p>
+  <div className="rule-box" tabIndex={0} aria-label="Regra completa de faltas e cancelamentos">{booking.rule.body}</div>
+  <label className="accept"><input type="checkbox" checked={accepted} onChange={e=>setAccepted(e.target.checked)} required/><span>Li e aceito a regra de faltas e cancelamentos acima.</span></label>
+  <div className="actions"><button className="primary" disabled={!accepted||busy}>{busy?'Aguarde…':'Confirmar agendamento'}</button><button type="button" onClick={()=>setChosen(null)} disabled={busy}>Escolher outro horário</button></div>
+ </form>}
+ {result&&<div className="message" role={result.ok?'status':'alert'}>{result.text}{['intake_required','profile_incomplete','outstanding_fee'].includes(result.reason)&&<> <button type="button" className="inline-link" onClick={onAccount}>Ir para Minha conta</button></>}</div>}
+ </section>;
 }
 export default function AvailabilityPanel(){
  const [day,setDay]=useState(today),[kind,setKind]=useState('open'),[from,setFrom]=useState('07:00'),[until,setUntil]=useState('11:00'),[reason,setReason]=useState(''),[drafts,setDrafts]=useState([]),[pubs,setPubs]=useState([]),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[conflicts,setConflicts]=useState([]),[revision,setRevision]=useState(0);
