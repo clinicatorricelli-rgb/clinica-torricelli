@@ -8,7 +8,7 @@
 
 **Estado atual:** homologação conectada ao Supabase de testes em São Paulo. Acesso administrativo com segundo fator e entrega de e-mail pelo SMTP Resend confirmados pelo usuário. Cadastro de cliente liberado somente para endereços previamente autorizados por hook no servidor; reservas e pagamentos seguem fechados. Ver [cadastro de testes e validação pendente pelo usuário](docs/CADASTRO-TESTES.md) e [integração validada e limites](docs/INTEGRACAO-VALIDADA.md).
 
-Prévia pública conectada ao banco de testes: https://clinica-torriceli-previa.pages.dev/ . O domínio próprio está verificado para envio de e-mail; a prévia continua no Cloudflare Pages.
+Prévia pública conectada ao banco de testes: https://clinicatorricelli.com.br/ (domínio próprio, desde 13/11/2026). O endereço https://clinica-torriceli-previa.pages.dev/ continua servindo o mesmo site, publicado no Cloudflare Pages.
 
 Base em React/Vite + Supabase Auth/Postgres. Sem configuração, a interface mostra uma demonstração identificada. Disponibilidade e bloqueios funcionam em homologação. Não há gateway ou cobranças.
 

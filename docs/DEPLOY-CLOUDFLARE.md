@@ -1,5 +1,7 @@
 # Prévia publicada — 04/11/2026
 
+**Domínio próprio — 13/11/2026:** o mesmo projeto Pages responde em https://clinicatorricelli.com.br/ (domínio personalizado ativo, certificado emitido pelo Cloudflare, HTTP redireciona para HTTPS). O DNS do domínio passou do Registro.br para o Cloudflare (zona Free na mesma conta). O fluxo automático continua publicando no projeto `clinica-torriceli-previa`, e o domínio acompanha cada publicação sem ajuste. O endereço `.pages.dev` segue ativo. Domínios personalizados e registros de DNS só podem ser mudados pelo usuário no painel; o token da nuvem apenas lê.
+
 **Publicação automática — 09/11/2026:** deploys passam a sair do GitHub Actions (`.github/workflows/publicar-site.yml`) a cada push em `main`, no mesmo projeto e endereço. Detalhes em `HANDOFF-CLAUDE-CODE.md` §15. As instruções manuais abaixo são históricas/emergência.
 
 **Ficha e menu — 06/11/2026:** https://4484cbf7.clinica-torriceli-previa.pages.dev/ ; bundle `index-BPV7Af5X.js`, HTTP200 e hash verificados. Cliente encontra ficha de extensão de cílios em Minha conta, admin/MFA encontra a parte técnica, botão Eduarda restrito à sessão autorizada. Homepage reorganizada. Vídeo inicial aguardando gravação; nenhuma mídia de apresentação inventada. `FICHA-CLIENTE.md` registra 48 testes locais e validação real da API, conflitos409 e acesso cruzado negado. Novas migrações aplicadas somente na homologação dedicada.
