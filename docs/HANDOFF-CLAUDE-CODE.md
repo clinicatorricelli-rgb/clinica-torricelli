@@ -2,7 +2,7 @@
 
 Preparado em **09/11/2026**, fuso `America/Sao_Paulo`, para continuar o trabalho no Claude Code a partir do mesmo diretório. Última entrega de aplicação publicada e validada: **06/11/2026**. Este documento foi confrontado com os arquivos locais atuais; não representa uma nova consulta ao estado remoto em 09/11.
 
-**Atualização 11/11/2026:** o usuário e a Eduarda extinguiram o sinal de 30% e qualquer pagamento no agendamento. Vale a regra de falta e cancelamento com taxa de 30% cobrada depois, registrada no topo de `docs/DECISOES.md`. Os trechos deste handoff sobre sinal, gateway, retenção (`held`/`hold_minutes`), webhook financeiro e remarcação com 12 h (seções 1 e 8 e item 6 da seção 16) são históricos e não devem ser implementados como estão. O site deixou de exibir "sinal previsto"; o banco ainda não mudou.
+**Atualização 11/11/2026:** o usuário e a Eduarda extinguiram o sinal de 30% e qualquer pagamento no agendamento. Vale a regra de falta e cancelamento com taxa de 30% cobrada depois, registrada no topo de `docs/DECISOES.md`. Os trechos deste handoff sobre sinal, gateway, retenção (`held`/`hold_minutes`), webhook financeiro e remarcação com 12 h (seções 1 e 8 e item 6 da seção 16) são históricos e não devem ser implementados como estão. O site deixou de exibir "sinal previsto". Em 13/11 as reservas sem pagamento foram implementadas no código (`docs/RESERVAS.md`), com migração ainda não aplicada no hospedado.
 
 ## 1. Missão e contexto do produto
 
