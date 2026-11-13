@@ -1,6 +1,6 @@
 # Reservas sem pagamento antecipado — 13/11/2026
 
-Implementa as decisões de 11/11 e 13/11 registradas no topo de `DECISOES.md`. **Estado: pronto no código e testado localmente; ainda não aplicado no Supabase hospedado nem publicado.**
+Implementa as decisões de 11/11 e 13/11 registradas no topo de `DECISOES.md`. **Estado: aplicado no Supabase hospedado e publicado em 13/11/2026, com aprovação do usuário. O agendamento continua desligado até a Eduarda ligar no painel.**
 
 ## O que a cliente faz
 
