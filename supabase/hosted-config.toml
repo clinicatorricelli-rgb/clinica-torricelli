@@ -1,8 +1,9 @@
 # Apply only to the dedicated clinic TEST project, never to unrelated projects.
 project_id = "clinica-torriceli-testes"
 [auth]
-site_url = "https://clinica-torriceli-previa.pages.dev"
-additional_redirect_urls = ["https://clinica-torriceli-previa.pages.dev/"]
+# Planned for the domain switch (13/11/2026); the hosted value only changes after approval.
+site_url = "https://clinicatorricelli.com.br"
+additional_redirect_urls = ["https://clinicatorricelli.com.br/", "https://www.clinicatorricelli.com.br/", "https://clinica-torriceli-previa.pages.dev/"]
 minimum_password_length = 12
 enable_signup = true
 [auth.email]

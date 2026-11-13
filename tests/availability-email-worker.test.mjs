@@ -71,7 +71,7 @@ test('rate limits and temporary failures retry; authentication failure stops thi
 
 test('unsubscribe GET redirects to Pages confirmation; POST performs bounded email-only revocation',async()=>{
  const {handler,calls}=setup();const link=base+'/unsubscribe?token='+'b'.repeat(64);
- const response=await handler(new Request(link));assert.equal(response.status,303);assert.equal(response.headers.get('location'),'https://clinica-torriceli-previa.pages.dev/?view=unsubscribe#token='+'b'.repeat(64));assert.equal(await response.text(),'');assert.equal(calls.unsubscribed.length,0);
+ const response=await handler(new Request(link));assert.equal(response.status,303);assert.equal(response.headers.get('location'),'https://clinicatorricelli.com.br/?view=unsubscribe#token='+'b'.repeat(64));assert.equal(await response.text(),'');assert.equal(calls.unsubscribed.length,0);
  for(let i=0;i<2;i++)assert.deepEqual(await (await handler(new Request(link,{method:'POST',headers:{'content-type':'application/x-www-form-urlencoded'},body:'List-Unsubscribe=One-Click'}))).json(),{status:'preference_updated'});
  assert.deepEqual(calls.unsubscribed,['b'.repeat(64),'b'.repeat(64)]);
  assert.equal((await handler(new Request(base+'/unsubscribe?token=forged',{method:'POST',body:''}))).status,415);
@@ -89,8 +89,9 @@ test('message contains current-date links, explicit opt-out and no guarantee of 
  const payload=buildAvailabilityEmail(fixture(),'https://fixture.supabase.co');
  assert.deepEqual(payload.to,['fixture-recipient@example.test']);assert.match(payload.text,/07\/01\/2030, 08\/01\/2030/);
  assert.match(payload.text,/não reserva nem garante/);assert.match(payload.html,/view=services/);
- assert.match(payload.text,/https:\/\/clinica-torriceli-previa\.pages\.dev\/\?view=unsubscribe#token=[a-f0-9]{64}/);
- assert.match(payload.html,/href="https:\/\/clinica-torriceli-previa\.pages\.dev\/\?view=unsubscribe#token=[a-f0-9]{64}"/);
+ assert.match(payload.text,/https:\/\/clinicatorricelli\.com\.br\/\?view=unsubscribe#token=[a-f0-9]{64}/);
+ assert.match(payload.html,/href="https:\/\/clinicatorricelli\.com\.br\/\?view=unsubscribe#token=[a-f0-9]{64}"/);
+ assert.doesNotMatch(payload.text,/pagamentos/,'aviso não fala mais em pagamentos');
  assert.match(payload.headers['List-Unsubscribe'],/^<https:\/\/fixture\.supabase\.co\/functions\/v1\/availability-email\/unsubscribe\?token=[a-f0-9]{64}>$/);
  assert.equal(payload.headers['List-Unsubscribe-Post'],'List-Unsubscribe=One-Click');
  assert.throws(()=>buildAvailabilityEmail({...fixture(),to:'first@example.test,second@example.test'},'https://fixture.supabase.co'),/invalid_private_job/);
@@ -124,7 +125,7 @@ test('webhook endpoint delegates before cron authentication without accessing de
  assert.equal(received,1);assert.equal(calls.enqueued,0);assert.equal(calls.claimed,0);
 });
 
-test('unsubscribe CORS allows only the exact Pages origin and never exposes dispatch',async()=>{
+test('unsubscribe CORS allows only the clinic site origins and never exposes dispatch',async()=>{
  const {handler,calls}=setup();const link=base+'/unsubscribe?token='+'b'.repeat(64);const origin='https://clinica-torriceli-previa.pages.dev';
  const preflight=await handler(new Request(link,{method:'OPTIONS',headers:{origin,'access-control-request-method':'POST','access-control-request-headers':'content-type'}}));
  assert.equal(preflight.status,204);assert.equal(preflight.headers.get('access-control-allow-origin'),origin);assert.equal(preflight.headers.get('vary'),'Origin');assert.equal(preflight.headers.get('access-control-allow-credentials'),null);
@@ -132,6 +133,12 @@ test('unsubscribe CORS allows only the exact Pages origin and never exposes disp
  assert.equal(posted.status,200);assert.equal(posted.headers.get('access-control-allow-origin'),origin);
  const unknown=await handler(new Request(link,{method:'POST',headers:{origin:'https://another.example.test','content-type':'application/x-www-form-urlencoded'},body:'List-Unsubscribe=One-Click'}));
  assert.equal(unknown.status,403);assert.equal(unknown.headers.get('access-control-allow-origin'),null);assert.equal(calls.unsubscribed.length,1);
+ for(const site of ['https://clinicatorricelli.com.br','https://www.clinicatorricelli.com.br']){
+  const ok=await handler(new Request(link,{method:'OPTIONS',headers:{origin:site,'access-control-request-method':'POST'}}));
+  assert.equal(ok.status,204);assert.equal(ok.headers.get('access-control-allow-origin'),site);
+ }
+ const lookalike=await handler(new Request(link,{method:'OPTIONS',headers:{origin:'https://clinicatorricelli.com.br.example.test'}}));
+ assert.equal(lookalike.status,403);assert.equal(lookalike.headers.get('access-control-allow-origin'),null);
  const dispatch=await handler(new Request(base,{method:'OPTIONS',headers:{origin}}));
  assert.equal(dispatch.status,405);assert.equal(dispatch.headers.get('access-control-allow-origin'),null);
 });
