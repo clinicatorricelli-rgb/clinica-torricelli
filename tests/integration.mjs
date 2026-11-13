@@ -39,7 +39,7 @@ test('isolamento direto pela API Supabase com duas contas fictícias', {skip:!ur
   assert.equal((await a.rpc('set_availability_alert_preference',{channel:'email',enabled:false,notice_version:'new-availability-v1'})).error,null);
   assert.deepEqual((await a.from('audit_log').select('*')).data,[]);
   const start=new Date('2030-01-07T14:00:00-03:00');
-  const row={customer_id:ids[1],service_id:1,starts_at:start.toISOString(),ends_at:new Date(+start+3600000).toISOString(),busy_until:new Date(+start+4500000).toISOString(),status:'confirmed',price_cents:15000,deposit_cents:4500};
+  const row={customer_id:ids[1],service_id:1,starts_at:start.toISOString(),ends_at:new Date(+start+3600000).toISOString(),busy_until:new Date(+start+4500000).toISOString(),status:'confirmed',price_cents:15000,fee_cents:4500};
   const inserted=await root.from('appointments').insert(row).select('id').single();assert.equal(inserted.error,null);
   try{
    assert.deepEqual((await a.from('appointments').select('*')).data,[]);
