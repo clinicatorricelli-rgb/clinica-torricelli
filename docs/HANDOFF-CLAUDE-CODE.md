@@ -2,6 +2,8 @@
 
 Preparado em **09/11/2026**, fuso `America/Sao_Paulo`, para continuar o trabalho no Claude Code a partir do mesmo diretório. Última entrega de aplicação publicada e validada: **06/11/2026**. Este documento foi confrontado com os arquivos locais atuais; não representa uma nova consulta ao estado remoto em 09/11.
 
+**Atualização 11/11/2026:** o usuário e a Eduarda extinguiram o sinal de 30% e qualquer pagamento no agendamento. Vale a regra de falta e cancelamento com taxa de 30% cobrada depois, registrada no topo de `docs/DECISOES.md`. Os trechos deste handoff sobre sinal, gateway, retenção (`held`/`hold_minutes`), webhook financeiro e remarcação com 12 h (seções 1 e 8 e item 6 da seção 16) são históricos e não devem ser implementados como estão. O site deixou de exibir "sinal previsto"; o banco ainda não mudou.
+
 ## 1. Missão e contexto do produto
 
 Continuar um sistema de atendimento/agendamento da **Clínica Torricelli**, de Eduarda, que é a única profissional na modelagem atual. O usuário é o desenvolvedor responsável pelo projeto. A marca pública usa **Torricelli com dois L**; nomes técnicos legados com um L em projeto, URL e alguns identificadores são intencionais e não devem ser renomeados em massa.
