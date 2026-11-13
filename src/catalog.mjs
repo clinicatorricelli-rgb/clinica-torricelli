@@ -12,6 +12,8 @@ const options = [
  ['Hydra Gloss','Sessão',100,40],['Micropigmentação Labial','Sessão',500,120],
  ['Remoção de cílios','Aplicados pela Eduarda',20,30],['Remoção de cílios','De outra profissional',50,30]
 ];
-export const catalog = options.map(([name,variant,reais,duration_minutes,maintenance_min_days,maintenance_max_days],i)=>({id:i+1,name,variant,price_cents:reais*100,duration_minutes,maintenance_min_days,maintenance_max_days}));
+// Extensões de cílios (ids 2 a 15) exigem a ficha preenchida antes de agendar.
+export const catalog = options.map(([name,variant,reais,duration_minutes,maintenance_min_days,maintenance_max_days],i)=>({id:i+1,name,variant,price_cents:reais*100,duration_minutes,maintenance_min_days,maintenance_max_days,requires_intake:i+1>=2&&i+1<=15}));
 export const money = cents => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(cents/100);
-export const deposit = cents => Math.floor((cents*30+50)/100);
+// Taxa por falta ou aviso com menos de 24 h: 30% do serviço, arredondada ao centavo.
+export const lateFee = cents => Math.floor((cents*30+50)/100);
