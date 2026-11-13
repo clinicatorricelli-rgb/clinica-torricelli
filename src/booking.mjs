@@ -56,4 +56,12 @@ export function cancelResult(result){
  if(result.kind==='client_late')return `Agendamento cancelado. Foi registrada uma taxa de ${money(result.fee_proposed_cents)} para avaliação da Eduarda.`;
  return 'Agendamento cancelado sem custo. O horário foi liberado.';
 }
+// 120 -> '2 horas', 90 -> '1 h 30 min', 45 -> '45 minutos'.
+export function duration(minutes){
+ if(!minutes)return 'nenhuma';
+ const h=Math.floor(minutes/60),m=minutes%60;
+ if(!h)return `${m} minutos`;
+ if(!m)return h===1?'1 hora':`${h} horas`;
+ return `${h} h ${m} min`;
+}
 export const ruleSummary = (rule,feeCents) => `Não há pagamento para agendar. Aviso com menos de ${rule.late_notice_hours} horas ou falta sem justificativa: taxa de ${money(feeCents)} (${rule.fee_percent}% do serviço), cobrada só depois da confirmação da Eduarda. Desistência em até ${rule.grace_minutes} minutos depois de marcar não gera taxa.`;

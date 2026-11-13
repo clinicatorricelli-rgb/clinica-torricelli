@@ -210,3 +210,21 @@ test('publicação de horários e avisos por e-mail continuam funcionando depois
   assert.equal((await f.book(f.ana,1,f.at('07:00'))).ok,true,'manhã publicada pode ser agendada');
  }finally{await f.pg.close();}
 });
+
+test('antecedência mínima esconde e recusa horários próximos; só a Eduarda ajusta os limites',async()=>{
+ const f=await fixture();try{
+  const info=(await f.pg.query('select public.booking_info() as r')).rows[0].r;assert.equal(info.min_notice_minutes,120);
+  await assert.rejects(f.as(f.ana,()=>f.rpc('public.admin_set_booking_limits(2880,2)')),/Admin MFA required/);
+  assert.deepEqual(await f.asAdmin(()=>f.rpc('public.admin_set_booking_limits(5000,2)')),{ok:false,reason:'invalid_limits'});
+  assert.deepEqual(await f.asAdmin(()=>f.rpc('public.admin_set_booking_limits(2880,3)')),{ok:true,min_notice_minutes:2880,max_future_bookings:3});
+  // With 48 hours of notice, nothing today or tomorrow can be offered or booked.
+  const today=(await f.pg.query("select to_char(now() at time zone 'America/Sao_Paulo','YYYY-MM-DD') as d")).rows[0].d;
+  const tomorrow=(await f.pg.query("select to_char((now() at time zone 'America/Sao_Paulo')::date+1,'YYYY-MM-DD') as d")).rows[0].d;
+  assert.equal((await f.slots(1,today)).length,0);assert.equal((await f.slots(1,tomorrow)).length,0);
+  assert.deepEqual(await f.book(f.ana,1,`${tomorrow}T19:00:00-03:00`),{ok:false,reason:'slot_unavailable'});
+  assert.ok((await f.slots(1)).length>0,'datas distantes continuam abertas');
+  const overview=await f.asAdmin(()=>f.rpc('public.admin_booking_overview($1,$2)',[today,f.monday]));
+  assert.equal(overview.min_notice_minutes,2880);assert.equal(overview.max_future_bookings,3);
+  assert.ok((await f.pg.query("select 1 from public.audit_log where action='booking.limits_changed'")).rows.length===1);
+ }finally{await f.pg.close();}
+});

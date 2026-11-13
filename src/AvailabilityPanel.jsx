@@ -1,5 +1,5 @@
 import React,{useEffect,useState} from 'react';import {supabase} from './supabase';import {catalog,money,lateFee} from './catalog.mjs';
-import {when,reasonMessage,ruleSummary} from './booking.mjs';
+import {when,reasonMessage,ruleSummary,duration} from './booking.mjs';
 const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 const clock=s=>new Intl.DateTimeFormat('pt-BR',{hour:'2-digit',minute:'2-digit',timeZone:'America/Sao_Paulo'}).format(new Date(s));
 export function AvailabilityPreview({selectedService=1,session=null,booking=null,onBooked=()=>{},onAccount=()=>{},onRuleChanged=()=>{}}){
@@ -22,7 +22,7 @@ export function AvailabilityPreview({selectedService=1,session=null,booking=null
  }
  const slotText=s=>`${clock(s.starts_at)}–${clock(s.ends_at)}`;
  return <section className="availability-preview"><p className="eyebrow">{canBook?'AGENDAMENTO':'CONSULTA DE DISPONIBILIDADE'}</p><h2>Encontre seu horário</h2>
- <p>{canBook?'Ambiente de testes. Escolha um horário para agendar. Não há pagamento para agendar. Horários de São Paulo.':'Ambiente de testes. Esta consulta não reserva nem confirma atendimento. Horários de São Paulo.'}</p>
+ <p>{canBook?`Ambiente de testes. Escolha um horário para agendar. Não há pagamento para agendar.${booking.min_notice_minutes?` Agendamentos com pelo menos ${duration(booking.min_notice_minutes)} de antecedência.`:''} Horários de São Paulo.`:'Ambiente de testes. Esta consulta não reserva nem confirma atendimento. Horários de São Paulo.'}</p>
  <div className="form-grid"><label>Serviço<select value={service} onChange={e=>setService(e.target.value)}>{catalog.map(s=><option key={s.id} value={s.id}>{s.name} · {s.variant} · {s.duration_minutes} min</option>)}</select></label><label>Dia<input type="date" min={today()} value={day} onChange={e=>setDay(e.target.value)}/></label></div>
  {!supabase?<p>Consulta disponível no ambiente conectado de testes.</p>:loading?<p role="status">Consultando horários…</p>:error?<p role="alert">{error}</p>:slots.length?<>
   <p>{money(slots[0].price_cents)}. {canBook?'Sem pagamento para agendar.':'Nenhuma cobrança nesta consulta.'}{canBook&&svc?.requires_intake?' Este serviço exige a ficha preenchida em Minha conta.':''}</p>

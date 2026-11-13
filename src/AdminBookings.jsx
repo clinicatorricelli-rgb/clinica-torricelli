@@ -1,5 +1,6 @@
 import React,{useEffect,useState} from 'react';import {supabase} from './supabase';import {money} from './catalog.mjs';
-import {when,clock,todayInClinic,addDays,statusLabel,feeLabel} from './booking.mjs';
+import {when,clock,todayInClinic,addDays,statusLabel,feeLabel,duration} from './booking.mjs';
+const noticeOptions=[0,60,120,180,240,360,720,1440,2880];
 
 // Eduarda's panel (role + second factor, enforced again by every database function).
 // Every fee starts as a proposal and only becomes a charge after a decision here.
@@ -9,12 +10,17 @@ const whatsapp=phone=>phone?`https://wa.me/${phone.replace(/\D/g,'')}`:null;
 
 export default function AdminBookings(){
  const [data,setData]=useState(null),[failed,setFailed]=useState(false),[reload,setReload]=useState(0),[busy,setBusy]=useState(false),[message,setMessage]=useState('');
- const [pending,setPending]=useState(null),[note,setNote]=useState('');
+ const [pending,setPending]=useState(null),[note,setNote]=useState(''),[limits,setLimits]=useState(null);
  useEffect(()=>{let alive=true;const today=todayInClinic();
   supabase.rpc('admin_booking_overview',{p_from:addDays(today,-14),p_until:addDays(today,45)}).then(({data,error})=>{if(!alive)return;if(error){setFailed(true);return;}setFailed(false);setData(data);});
   return()=>{alive=false;};
  },[reload]);
  const ask=p=>{setPending(p);setNote('');setMessage('');};
+ async function saveLimits(e){e.preventDefault();if(busy)return;setBusy(true);setMessage('');
+  try{const {data,error}=await supabase.rpc('admin_set_booking_limits',{p_min_notice_minutes:limits.notice,p_max_future_bookings:limits.max});if(error)throw error;
+   setMessage(data.ok?'Limites atualizados. Valem para os próximos agendamentos.':'Não foi feito: valores fora do permitido.');if(data.ok){setLimits(null);setReload(v=>v+1);}
+  }catch{setMessage('Não foi possível concluir. Confira a sessão e o segundo fator.');}finally{setBusy(false);}
+ }
  async function confirm(e){e.preventDefault();if(!pending||busy)return;if(pending.needsNote&&!note.trim())return;setBusy(true);setMessage('');
   try{const {data,error}=await supabase.rpc(pending.fn,pending.args(note.trim()||null));if(error)throw error;
    setMessage(data.ok?pending.done:`Não foi feito: ${refused[data.reason]||'atualize a página e tente de novo'}.`);setPending(null);setReload(v=>v+1);
@@ -38,7 +44,12 @@ export default function AdminBookings(){
   <button disabled={busy} onClick={()=>ask({key:'switch',fn:'admin_set_booking_enabled',args:()=>({p_enabled:!data.enabled}),note:false,
    label:data.enabled?'Desligar agendamento online':'Ligar agendamento online',
    warning:data.enabled?'Novos agendamentos param na hora. Os já marcados continuam valendo.':'A regra de faltas ainda é um rascunho sem revisão jurídica e nenhuma mensagem automática está ativa. Ligue só para testes com dados fictícios.',
-   done:data.enabled?'Agendamento online desligado.':'Agendamento online ligado.'})}>{data.enabled?'Desligar':'Ligar'} agendamento online</button>{box('switch')}</div>
+   done:data.enabled?'Agendamento online desligado.':'Agendamento online ligado.'})}>{data.enabled?'Desligar':'Ligar'} agendamento online</button>{box('switch')}
+  <p>Antecedência mínima para agendar: <strong>{duration(data.min_notice_minutes)}</strong>. Máximo de agendamentos futuros por cliente: <strong>{data.max_future_bookings}</strong>.</p>
+  {!limits?<button disabled={busy} onClick={()=>{setLimits({notice:data.min_notice_minutes,max:data.max_future_bookings});setMessage('');}}>Alterar limites</button>
+  :<form className="confirm-box" onSubmit={saveLimits}><div className="form-grid"><label>Antecedência mínima<select value={limits.notice} onChange={e=>setLimits({...limits,notice:Number(e.target.value)})}>{noticeOptions.map(m=><option key={m} value={m}>{duration(m)}</option>)}</select></label>
+   <label>Agendamentos futuros por cliente<select value={limits.max} onChange={e=>setLimits({...limits,max:Number(e.target.value)})}>{[1,2,3,4,5].map(n=><option key={n} value={n}>{n}</option>)}</select></label></div>
+   <div className="actions"><button className="primary" disabled={busy}>{busy?'Aguarde…':'Salvar limites'}</button><button type="button" disabled={busy} onClick={()=>setLimits(null)}>Voltar</button></div></form>}</div>
  {message&&<p className="message" role="status">{message}</p>}
  <h3>Taxas em aberto</h3>
  {data.open_fees.length?data.open_fees.map(f=><article className="availability-change" key={f.id}>

@@ -38,7 +38,8 @@ end $$;
 alter table public.clinic_settings drop column deposit_percent, drop column hold_minutes;
 alter table public.clinic_settings
  add column booking_rule_version text references public.booking_rules(version),
- add column max_future_bookings integer not null default 2 check(max_future_bookings between 1 and 20);
+ add column max_future_bookings integer not null default 2 check(max_future_bookings between 1 and 20),
+ add column min_notice_minutes integer not null default 120 check(min_notice_minutes between 0 and 2880);
 update public.clinic_settings set booking_rule_version='falta-rascunho-2026-11' where id;
 alter table public.clinic_settings add constraint booking_requires_rule check(not booking_enabled or booking_rule_version is not null);
 
@@ -142,7 +143,7 @@ begin
  select * into w from public.weekly_availability where weekday=extract(isodow from p_day)::integer;if not found then return;end if;
  for t in select generate_series(p_day+w.opens_at,p_day+w.closes_at-p_minutes*interval '1 minute',interval '15 minutes') loop
   stamp:=t at time zone 'America/Sao_Paulo';
-  if stamp>now() and private.slot_allowed(p_day,t::time,p_minutes,cfg.buffer_minutes,p_ignore) then return next stamp;end if;
+  if stamp>now()+cfg.min_notice_minutes*interval '1 minute' and private.slot_allowed(p_day,t::time,p_minutes,cfg.buffer_minutes,p_ignore) then return next stamp;end if;
  end loop;
 end;$$;
 create function public.available_slots(p_service_id integer,p_day date)
@@ -162,7 +163,7 @@ grant execute on function public.available_slots(integer,date) to anon,authentic
 
 -- 7. What any visitor may know before booking: whether booking is open and the rule to accept.
 create function public.booking_info() returns jsonb language sql stable security definer set search_path='' as $$
- select jsonb_build_object('enabled',c.booking_enabled,'max_future_bookings',c.max_future_bookings,
+ select jsonb_build_object('enabled',c.booking_enabled,'max_future_bookings',c.max_future_bookings,'min_notice_minutes',c.min_notice_minutes,
   'rule',case when r.version is null then null else jsonb_build_object('version',r.version,'body',r.body,
    'late_notice_hours',r.late_notice_hours,'fee_percent',r.fee_percent,'grace_minutes',r.grace_minutes) end)
  from public.clinic_settings c left join public.booking_rules r on r.version=c.booking_rule_version where c.id;
@@ -318,6 +319,17 @@ begin
  return jsonb_build_object('ok',true,'enabled',p_enabled);
 end;$$;
 
+create function public.admin_set_booking_limits(p_min_notice_minutes integer,p_max_future_bookings integer)
+returns jsonb language plpgsql security definer set search_path='' as $$
+begin
+ if not private.is_admin() then raise exception 'Admin MFA required' using errcode='42501';end if;
+ if p_min_notice_minutes is null or p_min_notice_minutes not between 0 and 2880 or p_max_future_bookings is null or p_max_future_bookings not between 1 and 20 then
+  return jsonb_build_object('ok',false,'reason','invalid_limits');end if;
+ update public.clinic_settings set min_notice_minutes=p_min_notice_minutes,max_future_bookings=p_max_future_bookings where id;
+ insert into public.audit_log(actor_id,action) values(auth.uid(),'booking.limits_changed');
+ return jsonb_build_object('ok',true,'min_notice_minutes',p_min_notice_minutes,'max_future_bookings',p_max_future_bookings);
+end;$$;
+
 create function public.admin_mark_attendance(p_id uuid,p_outcome text,p_note text default null)
 returns jsonb language plpgsql security definer set search_path='' as $$
 declare a public.appointments;fee public.appointment_fees;note text:=nullif(btrim(coalesce(p_note,'')),'');fee_status text;
@@ -419,12 +431,13 @@ begin
    'appointment',jsonb_build_object('id',a.id,'starts_at',a.starts_at,'service',jsonb_build_object('name',s.name,'variant',s.variant))) as item
   from public.appointment_fees f join public.appointments a on a.id=f.appointment_id join public.services s on s.id=a.service_id join public.profiles p on p.id=f.customer_id
   where f.status in ('proposed','confirmed')) q;
- return jsonb_build_object('enabled',cfg.booking_enabled,'rule_version',cfg.booking_rule_version,'items',items,'open_fees',open_fees);
+ return jsonb_build_object('enabled',cfg.booking_enabled,'rule_version',cfg.booking_rule_version,'min_notice_minutes',cfg.min_notice_minutes,
+  'max_future_bookings',cfg.max_future_bookings,'items',items,'open_fees',open_fees);
 end;$$;
 
 revoke all on function public.book_appointment(integer,timestamptz,text,uuid),public.cancel_appointment(uuid),public.reschedule_appointment(uuid,timestamptz),
- public.reschedule_slots(uuid,date),public.my_appointments(),public.admin_set_booking_enabled(boolean),public.admin_mark_attendance(uuid,text,text),public.admin_decide_fee(uuid,text,text),
+ public.reschedule_slots(uuid,date),public.my_appointments(),public.admin_set_booking_enabled(boolean),public.admin_set_booking_limits(integer,integer),public.admin_mark_attendance(uuid,text,text),public.admin_decide_fee(uuid,text,text),
  public.admin_settle_fee(uuid,text),public.admin_cancel_appointment(uuid,text),public.admin_booking_overview(date,date) from public,anon;
 grant execute on function public.book_appointment(integer,timestamptz,text,uuid),public.cancel_appointment(uuid),public.reschedule_appointment(uuid,timestamptz),
- public.reschedule_slots(uuid,date),public.my_appointments(),public.admin_set_booking_enabled(boolean),public.admin_mark_attendance(uuid,text,text),public.admin_decide_fee(uuid,text,text),
+ public.reschedule_slots(uuid,date),public.my_appointments(),public.admin_set_booking_enabled(boolean),public.admin_set_booking_limits(integer,integer),public.admin_mark_attendance(uuid,text,text),public.admin_decide_fee(uuid,text,text),
  public.admin_settle_fee(uuid,text),public.admin_cancel_appointment(uuid,text),public.admin_booking_overview(date,date) to authenticated;

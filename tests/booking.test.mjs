@@ -35,3 +35,8 @@ test('resumo da regra usa os números da versão aceita e as datas usam o fuso d
  assert.equal(todayInClinic(new Date('2030-01-07T02:30:00Z')),'2030-01-06','23h30 de domingo em São Paulo ainda é domingo');
  assert.equal(addDays('2030-01-30',3),'2030-02-02');
 });
+
+test('antecedência aparece em palavras',async()=>{
+ const {duration}=await import('../src/booking.mjs');
+ assert.equal(duration(120),'2 horas');assert.equal(duration(60),'1 hora');assert.equal(duration(90),'1 h 30 min');assert.equal(duration(45),'45 minutos');assert.equal(duration(0),'nenhuma');assert.equal(duration(2880),'48 horas');
+});

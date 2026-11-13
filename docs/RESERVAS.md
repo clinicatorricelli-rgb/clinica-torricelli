@@ -16,7 +16,7 @@ Implementa as decisões de 11/11 e 13/11 registradas no topo de `DECISOES.md`. *
 - Falta: só a Eduarda registra, escolhendo cobrar ou dispensar (dispensa exige motivo).
 - Toda taxa só vira cobrança quando a Eduarda confirma. Taxa confirmada bloqueia novos agendamentos pelo site até a baixa ou a dispensa.
 - Baixa: manual, pela Eduarda, depois de conferir o extrato. Não existe leitura de comprovante.
-- Máximo de 2 agendamentos futuros por cliente (`clinic_settings.max_future_bookings`).
+- Máximo de 2 agendamentos futuros por cliente (`clinic_settings.max_future_bookings`) e antecedência mínima de 2 h (`min_notice_minutes`); a Eduarda ajusta os dois no painel (`admin_set_booking_limits`).
 - Cancelamento pela clínica exige motivo e não gera taxa.
 
 O texto aceito é versionado em `booking_rules` (`falta-rascunho-2026-11`). Cada agendamento guarda versão aceita, data do aceite, preço e taxa congelados. Texto novo = versão nova; quem estiver com a página aberta recebe `rule_changed` e precisa aceitar de novo. **O texto atual é rascunho sem revisão jurídica.**
@@ -49,6 +49,9 @@ Sem a migração aplicada, o site publicado continua como hoje: `booking_info` f
 
 ## Para colocar no ar (exige aprovação do usuário)
 
+Desde 13/11 há um token pessoal do Supabase salvo nas configurações da nuvem (o usuário salvou pelo formulário seguro), então a migração pode ser aplicada desta sessão pela Management API (`POST /v1/projects/zpgzndrgsvynfomjqods/database/migrations`, que registra o histórico), sem o computador do escritório. Ensaio feito em 13/11 no banco real dentro de um bloco cancelado no fim: aplicou sem erro, `booking_info` desligado, 41 horários numa sexta; nada ficou gravado.
+
+
 1. No computador do escritório, conferir projeto `clinica-torriceli-testes` / `sa-east-1` e aplicar a migração com a CLI (`db push --dry-run` antes).
 2. Rodar `tests/integration.mjs` e `tests/client-intake.integration.mjs` seletivamente (não a suíte padrão; ver CLAUDE.md).
 3. Mesclar o PR em `main` (publica o site).
@@ -56,7 +59,7 @@ Sem a migração aplicada, o site publicado continua como hoje: `booking_info` f
 
 ## Ainda não decidido / não feito
 
-- Antecedência mínima para agendar (hoje é possível marcar um horário que começa em poucos minutos).
+- Antecedência mínima: padrão de 2 h escolhido pelo agente em 13/11 (o usuário não respondeu); ajustável no painel.
 - Mensagens pelo WhatsApp (confirmação, lembretes, cobrança): dependem da ativação da Positus; `appointment_fees.reminders_sent` já limita a 3.
 - Verificação do número de WhatsApp da cliente antes de qualquer cobrança.
 - Revisão jurídica do texto da regra e definição do que conta como justificativa.
