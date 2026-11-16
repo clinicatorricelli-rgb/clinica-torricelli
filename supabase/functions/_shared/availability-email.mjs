@@ -1,6 +1,9 @@
 import { timingSafeEqual } from 'node:crypto';
 
-const SITE_ORIGIN = 'https://clinica-torriceli-previa.pages.dev';
+// Links in e-mails point to the clinic's own domain. The previous Pages address
+// keeps working, so its pages may still call the unsubscribe endpoint.
+const SITE_ORIGIN = 'https://clinicatorricelli.com.br';
+const ALLOWED_ORIGINS = new Set([SITE_ORIGIN,'https://www.clinicatorricelli.com.br','https://clinica-torriceli-previa.pages.dev']);
 const SITE_URL = `${SITE_ORIGIN}/?view=services`;
 const SENDER = 'Clínica Torricelli <acesso@clinicatorricelli.com.br>';
 const TOKEN = /^[a-f0-9]{64}$/;
@@ -56,7 +59,7 @@ export function buildAvailabilityEmail(job, supabaseUrl) {
   const dates = shownDays.join(', ') + (days.length > 20 ? ` e mais ${days.length - 20} datas` : '');
   const title = 'Novos horários disponíveis';
   const notice = 'A Eduarda publicou novos horários na agenda da Clínica Torricelli.';
-  const disclaimer = 'Consulte os horários atuais no site. Este aviso não reserva nem garante um horário. Reservas e pagamentos ainda estão indisponíveis no ambiente de testes.';
+  const disclaimer = 'Consulte os horários atuais no site. Este aviso não reserva nem garante um horário.';
   return {
     from: SENDER,
     to: [job.to],
@@ -101,8 +104,8 @@ export function createAvailabilityEmailHandler({db, fetchImpl = fetch, cronSecre
       if(url.pathname.endsWith('/webhook')) return webhookHandler ? await webhookHandler(request) : json({error:'webhook_not_configured'},503);
       if (url.pathname.endsWith('/unsubscribe')) {
         const origin=request.headers.get('origin');
-        if(origin && origin!==SITE_ORIGIN) return json({error:'origin_not_allowed'},403);
-        corsHeaders={'Vary':'Origin',...(origin===SITE_ORIGIN?{'Access-Control-Allow-Origin':SITE_ORIGIN}: {})};
+        if(origin && !ALLOWED_ORIGINS.has(origin)) return json({error:'origin_not_allowed'},403);
+        corsHeaders={'Vary':'Origin',...(origin?{'Access-Control-Allow-Origin':origin}: {})};
         const reply=(value,status=200)=>json(value,status,corsHeaders);
         if(request.method==='OPTIONS') return new Response(null,{status:204,headers:{...SECURITY_HEADERS,...corsHeaders,'Access-Control-Allow-Methods':'GET, POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type'}});
         if (!['GET','POST'].includes(request.method)) return reply({error: 'method_not_allowed'}, 405);

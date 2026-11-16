@@ -2,7 +2,9 @@
 
 Preparado em **09/11/2026**, fuso `America/Sao_Paulo`, para continuar o trabalho no Claude Code a partir do mesmo diretório. Última entrega de aplicação publicada e validada: **06/11/2026**. Este documento foi confrontado com os arquivos locais atuais; não representa uma nova consulta ao estado remoto em 09/11.
 
-**Atualização 11/11/2026:** o usuário e a Eduarda extinguiram o sinal de 30% e qualquer pagamento no agendamento. Vale a regra de falta e cancelamento com taxa de 30% cobrada depois, registrada no topo de `docs/DECISOES.md`. Os trechos deste handoff sobre sinal, gateway, retenção (`held`/`hold_minutes`), webhook financeiro e remarcação com 12 h (seções 1 e 8 e item 6 da seção 16) são históricos e não devem ser implementados como estão. O site deixou de exibir "sinal previsto". Em 13/11 as reservas sem pagamento foram implementadas no código (`docs/RESERVAS.md`), com migração ainda não aplicada no hospedado.
+**Atualização 11/11/2026:** o usuário e a Eduarda extinguiram o sinal de 30% e qualquer pagamento no agendamento. Vale a regra de falta e cancelamento com taxa de 30% cobrada depois, registrada no topo de `docs/DECISOES.md`. Os trechos deste handoff sobre sinal, gateway, retenção (`held`/`hold_minutes`), webhook financeiro e remarcação com 12 h (seções 1 e 8 e item 6 da seção 16) são históricos e não devem ser implementados como estão. O site deixou de exibir "sinal previsto". Em 13/11 as reservas sem pagamento foram implementadas no código (`docs/RESERVAS.md`), aplicadas no hospedado e publicadas (PR #2), com o agendamento ainda desligado.
+
+**Atualização 13/11/2026 (domínio próprio):** o site passou a responder em https://clinicatorricelli.com.br/ (DNS no Cloudflare, domínio ligado ao projeto Pages; o endereço `.pages.dev` continua). Com aprovação do usuário, o Auth do Supabase passou a usar o domínio novo (`site_url`; lista de redirecionamento com o domínio, o `www` e o `.pages.dev`) e a função `availability-email` foi publicada na versão 4 pela Management API (links dos avisos no domínio novo; descadastro aceita esses três endereços). O cron de avisos seguiu respondendo 200. Na migração, o registro `send` do Resend tinha sido colado com dois destinos e foi corrigido pelo usuário para `send.forge.rmta.net`. Pendente: o usuário adicionar `www.clinicatorricelli.com.br` em Domínios personalizados do Pages.
 
 ## 1. Missão e contexto do produto
 
@@ -34,13 +36,13 @@ C:\Users\LUCASCORTS\Documents\ChatGPT\SISTEMA DE AGENDAMENTOS CLINICA
 | Recurso | Estado conhecido |
 | --- | --- |
 | Frontend | Cloudflare Pages, Direct Upload por Wrangler; projeto existente `clinica-torriceli-previa` |
-| URL estável | https://clinica-torriceli-previa.pages.dev/ |
+| Endereço principal (13/11) | https://clinicatorricelli.com.br/ ; https://clinica-torriceli-previa.pages.dev/ continua servindo o mesmo site |
 | Último deployment validado | https://4484cbf7.clinica-torriceli-previa.pages.dev/ |
 | Bundle desse deployment | `index-BPV7Af5X.js`, CSS `index-C8RNTIgb.css` |
 | Backend | Supabase dedicado `clinica-torriceli-testes`, região São Paulo `sa-east-1`; plano gratuito quando criado |
 | Outro Supabase | Projeto inicial em outra região foi preservado; não é o alvo dos scripts |
 | Domínio comprado pelo usuário | `clinicatorricelli.com.br`, Registro.br |
-| Domínio próprio | Verificado para e-mail no Resend; não foi confirmado como domínio do frontend |
+| Domínio próprio | Verificado para e-mail no Resend; desde 13/11 também é o endereço do frontend, com DNS no Cloudflare |
 | E-mail | Resend SMTP para Auth e API Resend para avisos de vagas, integrações separadas |
 | WhatsApp | App Meta criado, integração ainda não operacional |
 | Reservas/gateway | Desativados/não implementados operacionalmente |

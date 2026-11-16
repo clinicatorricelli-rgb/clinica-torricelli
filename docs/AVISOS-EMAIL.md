@@ -1,5 +1,7 @@
 # Avisos de novas vagas por e-mail — 05/11/2026
 
+**Atualização 13/11/2026:** função `availability-email` publicada na versão 4 pela Management API, com aprovação do usuário. Os links dos avisos levam a https://clinicatorricelli.com.br/ ; o descadastro aceita pedidos do domínio novo, do `www` e do `.pages.dev` e recusa endereços parecidos (conferido com pré-requisições, sem enviar e-mail). Saiu do texto a frase sobre pagamentos indisponíveis. O cron por minuto continuou respondendo 200 depois da troca. Antes de publicar, o pacote da versão 3 foi baixado e comparado: era igual ao primeiro commit, então a versão 4 muda só o que está no commit `3148153`.
+
 Implementação no Supabase dedicado de testes e frontend Cloudflare Pages. O usuário autorizou a integração e escolheu explicitamente **no máximo um aviso por cliente por dia, entre 8h e 20h, em São Paulo**. Aberturas próximas são agrupadas durante cinco minutos; limite global inicial de 50 destinatários/dia, contando reservas duráveis de tentativa, para o teste controlado. Esse limite aparece no painel. WhatsApp permanece em preparação.
 
 Site estável https://clinica-torriceli-previa.pages.dev/ ; deployment desta entrega https://73a64f35.clinica-torriceli-previa.pages.dev/ . Bundle `index-BmR0lXO7.js` verificado por hash com o build local, HTTP200, CSP e noindex preservados. Nenhum endereço pessoal incluído no bundle.

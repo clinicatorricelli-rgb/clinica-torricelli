@@ -23,7 +23,7 @@ test('links Auth reais de confirmação, recovery e convite sem envio a endereç
   const redirect=await fetch(invitation.data.properties.action_link,{redirect:'manual'});
   assert.ok([302,303].includes(redirect.status),'Link de convite deve redirecionar para o site configurado');
   const destination=new URL(redirect.headers.get('location'));
-  assert.equal(destination.origin,'https://clinica-torriceli-previa.pages.dev');
+  assert.equal(destination.origin,'https://clinicatorricelli.com.br');
   const callback=emailCallback(destination.search,destination.hash);assert.equal(callback.kind,'session');assert.equal(callback.requiresPassword,true);
   const accepted=await client.auth.setSession({access_token:callback.access_token,refresh_token:callback.refresh_token});assert.equal(accepted.error,null);assert.ok(accepted.data.user.email_confirmed_at);
   assert.equal((await client.auth.updateUser({password:replacement})).error,null);

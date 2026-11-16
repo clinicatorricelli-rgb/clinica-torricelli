@@ -1,5 +1,7 @@
 # SMTP Resend — 05/11/2026
 
+**DNS no Cloudflare — 13/11/2026:** o domínio passou a usar os servidores do Cloudflare. Os três registros do Resend foram recriados lá, todos sem proxy (nuvem cinza): CNAME `send`→`send.forge.rmta.net`, CNAME `rsend`→`rsend-sae1.forge.rmta.net` e TXT `resend._domainkey`. O `send` foi gravado primeiro com dois destinos colados e corrigido logo depois da ativação. Se o Resend acusar falha de verificação, conferir esses três registros antes de mexer em qualquer outra coisa. Ligar o proxy (nuvem laranja) em qualquer um deles quebra o envio.
+
 **Teste de cliente concluído:** usuário cadastrou a segunda conta pelo site, confirmou o e-mail, salvou dados e preferências. Em seguida configurou a chave da API de avisos, publicou uma manhã de segunda e confirmou recebimento do aviso. SMTP/Auth e API de avisos validados separadamente; ver `CADASTRO-TESTES.md` e `AVISOS-EMAIL.md`. Restam os webhooks de entrega/bounce e a próxima integração oficial WhatsApp.
 
 **Atualização:** usuário confirmou recebimento na caixa de entrada por captura do Gmail, remetente Clínica Torricelli `<acesso@clinicatorricelli.com.br>`. Entrega SMTP real confirmada para o destinatário administrativo autorizado. Mensagens de confirmação, convite e recuperação foram então localizadas para português e aplicadas no Auth com custom SMTP, sem alterar a credencial. Teste integrado de links Auth voltou a passar; nenhum segundo e-mail de teste foi enviado nesta localização.

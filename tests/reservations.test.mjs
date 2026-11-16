@@ -168,7 +168,10 @@ test('falta, taxa e baixa dependem sempre da Eduarda com segundo fator; taxa con
   assert.deepEqual(await f.book(f.ana,1,f.at('15:00')),{ok:false,reason:'outstanding_fee'});
   const mine=await f.mine(f.ana);assert.equal(mine.open_fee_cents,4500);assert.equal(mine.items[0].fee.status,'confirmed');
   assert.ok(!JSON.stringify(mine).includes('Não avisou'),'anotação interna não chega à cliente');
-  const overview=await decide('public.admin_booking_overview($1,$2)',[new Date().toISOString().slice(0,10),f.monday]);
+  // The no-show was moved to 2 hours ago: in São Paulo that can still be "yesterday" (e.g. at 00:30),
+  // and the UTC date runs 3 hours ahead of the clinic. Start the window on the clinic's previous day.
+  const yesterday=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo'}).format(new Date(Date.now()-86400000));
+  const overview=await decide('public.admin_booking_overview($1,$2)',[yesterday,f.monday]);
   assert.equal(overview.open_fees.length,1);assert.equal(overview.open_fees[0].customer.phone,'+5511900000001');
   assert.equal(overview.items.find(i=>i.id===a.id).notes[0].note,'Não avisou');
   await assert.rejects(f.as(f.ana,()=>f.rpc('public.admin_booking_overview($1,$2)',[f.monday,f.monday])),/Admin MFA required/);
