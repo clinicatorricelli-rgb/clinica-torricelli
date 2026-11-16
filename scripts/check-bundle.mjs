@@ -10,6 +10,13 @@ if (!/^sb_publishable_/.test(process.env.VITE_SUPABASE_PUBLISHABLE_KEY || '')) f
 
 for (const f of ['dist/index.html', 'dist/_headers', 'dist/_redirects', 'dist/media/abertura-v4.mp4']) if (!existsSync(f)) fail(`faltando ${f}`);
 
+// The security policy names the Supabase project explicitly: a build pointing elsewhere
+// would load but every request would be blocked by the browser.
+const headers = readFileSync('dist/_headers', 'utf8');
+const connectSrc = (headers.match(/connect-src ([^;\n]*)/) || [])[1] || '';
+if (!connectSrc.split(/\s+/).includes(expectedUrl)) fail('a política de segurança (CSP) não libera o endereço do Supabase desta montagem');
+if (!/Strict-Transport-Security: max-age=\d+/.test(headers)) fail('faltando Strict-Transport-Security em _headers');
+
 const files = readdirSync('dist/assets').filter(f => /\.(js|css|html)$/.test(f)).map(f => `dist/assets/${f}`).concat('dist/index.html');
 const text = Object.fromEntries(files.map(f => [f, readFileSync(f, 'utf8')]));
 const js = files.filter(f => f.endsWith('.js')).map(f => text[f]).join('\n');

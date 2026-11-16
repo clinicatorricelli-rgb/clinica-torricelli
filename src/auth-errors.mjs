@@ -10,6 +10,7 @@ export function authError(error){
   case 'reauthentication_needed':case 'reauthentication_not_valid':return 'Precisamos renovar a confirmação de segurança. Use Recuperar senha para receber um novo link.';
   case 'otp_expired':case 'refresh_token_not_found':case 'session_not_found':case 'bad_jwt':return 'Este acesso expirou. Use Recuperar senha para receber um novo link.';
   case 'over_request_rate_limit':case 'over_email_send_rate_limit':return 'O serviço limitou as tentativas. Aguarde antes de tentar novamente.';
+  case 'captcha_failed':case 'captcha_pending':return 'Não deu para confirmar que você não é um robô. Aguarde a verificação terminar e tente de novo.';
   case 'invalid_credentials':return 'E-mail ou senha não conferem. Verifique os dados ou use Recuperar senha.';
   default:return error?.name==='AuthSessionMissingError'?'A confirmação do link expirou. Use Recuperar senha para continuar.':'Não foi possível concluir. Confira os dados e tente novamente.';
  }

@@ -22,3 +22,4 @@ select{font:inherit;font-weight:500;display:block;width:100%;max-width:100%;bord
 .admin-bookings{padding:35px 0;border-top:1px solid #d7c9b7;margin-top:28px}.booking-switch{border:1px solid #d7c9b7;border-radius:12px;padding:18px;margin:14px 0}
 .admin-bookings a{color:#57432f;font-weight:700}
 @media(max-width:700px){.booking-confirm,.confirm-box{padding:16px}.actions button{width:100%}}
+.turnstile{margin:4px 0 0;max-width:100%}.turnstile:empty{margin:0}.captcha-wait{display:block;color:#6d5a46;margin:6px 0}
