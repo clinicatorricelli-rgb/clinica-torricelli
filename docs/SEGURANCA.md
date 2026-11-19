@@ -17,7 +17,13 @@ O usuário mandou dois vídeos (Instagram): "7 portas que ficam abertas em sites
 | Vídeo 2: IP da origem exposto | Não se aplica | Não há servidor próprio: o site é estático no Cloudflare. O endereço do Supabase é público por desenho e protegido por RLS, não por esconder. |
 | Vídeo 2: Turnstile | Corrigido no código | Ver abaixo. |
 
-## Ajustes feitos (branch `claude/nifty-davinci-625jg8`)
+## Publicado em 16/11/2026
+
+Com aprovação do usuário: PR #3 mesclado (`cf506c6`), site com o bundle `index-yPqdcdCc.js` nos dois endereços, já com `Strict-Transport-Security` e a CSP nova. Migração `202611160001` aplicada pela Management API, depois de um ensaio que não gravou nada. Conferido como visitante sem login: as duas funções agora respondem "permission denied", e `available_slots` e `booking_info` continuam respondendo. O conselheiro de segurança do Supabase caiu de 36 para 34 apontamentos. No navegador, o site novo carrega sem erro.
+
+Achado na conferência: a Cloudflare tenta injetar o contador de visitas (`static.cloudflareinsights.com`, Web Analytics automático da zona), e a CSP bloqueia. O bloqueio já acontecia com a CSP anterior e não afeta o site. Para sumir o aviso no console, o usuário pode desligar o Web Analytics automático no painel. Liberar na CSP exigiria citar mais um terceiro no aviso de privacidade.
+
+## Ajustes feitos
 
 - **Turnstile** (`src/Turnstile.jsx`): login, cadastro e "Recuperar senha" pedem um token de uso único, que segue para o Supabase em `captchaToken`. Roda escondido (`interaction-only`) e só carrega com `VITE_TURNSTILE_SITE_KEY`; sem ela, nada muda. Conferido em navegador com a chave de teste da Cloudflare (`1x00000000000000000000AA`): token enviado no login e na recuperação, sem violação de CSP e sem rolagem lateral no celular.
 - **Cabeçalhos** (`public/_headers`): `Strict-Transport-Security` de 1 ano; CSP só conversa com o projeto Supabase da clínica (antes `*.supabase.co`) e libera `challenges.cloudflare.com` apenas para o Turnstile. `check-bundle` falha se a CSP não liberar o endereço do Supabase da montagem. Testes em `tests/security-headers.test.mjs`.
@@ -25,6 +31,8 @@ O usuário mandou dois vídeos (Instagram): "7 portas que ficam abertas em sites
 - Teste noturno corrigido: `tests/reservations.test.mjs` usava a data UTC como "hoje" e falhava entre 21 h e meia-noite em São Paulo.
 
 ## Para ligar o Turnstile (nesta ordem)
+
+Estado em 19/11: passos 1 e 2 feitos (widget criado pelo usuário; Site Key `0x4AAAAAAGInFuL76R_-sGXI` no workflow, e `check-bundle` falha se ela faltar no bundle). Falta o passo 3, feito pelo usuário.
 
 1. O usuário cria o widget no Cloudflare (Turnstile → Add widget), modo **Managed**, com os domínios `clinicatorricelli.com.br` e `clinica-torriceli-previa.pages.dev`.
 2. A chave do site (pública) entra em `VITE_TURNSTILE_SITE_KEY`, no `env` de `.github/workflows/publicar-site.yml`, e o site é publicado.
