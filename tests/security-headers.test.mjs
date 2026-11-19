@@ -19,6 +19,12 @@ test('Turnstile liberado só no domínio oficial da Cloudflare; nada de scripts 
  assert.ok(!Object.values(csp).flat().some(v=>v.includes("'unsafe-")),'sem unsafe-inline/unsafe-eval');
 });
 
+test('a publicação leva só a chave pública do Turnstile',()=>{
+ const key=workflow.match(/VITE_TURNSTILE_SITE_KEY:\s*(\S+)/)?.[1];
+ assert.match(key,/^0x4[A-Za-z0-9_-]{16,}$/,'Site Key no formato do Cloudflare');
+ assert.doesNotMatch(workflow,/TURNSTILE_SECRET|0x4[A-Za-z0-9_-]{30,}/,'nenhuma Secret Key no workflow');
+});
+
 test('o navegador é instruído a usar sempre HTTPS',()=>{
  const max=Number(headers.match(/Strict-Transport-Security: max-age=(\d+)/)?.[1]);
  assert.ok(max>=15552000,'pelo menos 180 dias');

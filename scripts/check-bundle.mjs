@@ -21,6 +21,9 @@ const files = readdirSync('dist/assets').filter(f => /\.(js|css|html)$/.test(f))
 const text = Object.fromEntries(files.map(f => [f, readFileSync(f, 'utf8')]));
 const js = files.filter(f => f.endsWith('.js')).map(f => text[f]).join('\n');
 if (!js.includes(expectedUrl)) fail('o bundle não contém o endereço do Supabase: montagem desconectada');
+// With the captcha on in Supabase, a build without the Turnstile key would lock everyone out.
+const turnstileKey = process.env.VITE_TURNSTILE_SITE_KEY;
+if (turnstileKey && !js.includes(turnstileKey)) fail('VITE_TURNSTILE_SITE_KEY definida, mas ausente do bundle');
 
 const jwtRole = token => {try {return JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString('utf8')).role;} catch {return null;}};
 const forbidden = [

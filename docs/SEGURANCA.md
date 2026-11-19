@@ -32,6 +32,8 @@ Achado na conferência: a Cloudflare tenta injetar o contador de visitas (`stati
 
 ## Para ligar o Turnstile (nesta ordem)
 
+Estado em 19/11: passos 1 e 2 feitos (widget criado pelo usuário; Site Key `0x4AAAAAAGInFuL76R_-sGXI` no workflow, e `check-bundle` falha se ela faltar no bundle). Falta o passo 3, feito pelo usuário.
+
 1. O usuário cria o widget no Cloudflare (Turnstile → Add widget), modo **Managed**, com os domínios `clinicatorricelli.com.br` e `clinica-torriceli-previa.pages.dev`.
 2. A chave do site (pública) entra em `VITE_TURNSTILE_SITE_KEY`, no `env` de `.github/workflows/publicar-site.yml`, e o site é publicado.
 3. Só depois disso o usuário cola a chave secreta no Supabase (Authentication → Attack Protection → captcha Turnstile). Se o Supabase exigir captcha antes de o site enviar os tokens, ninguém consegue entrar.

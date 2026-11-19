@@ -37,6 +37,9 @@ jobs:
       # Mostra o formulário de cadastro; quem decide se a conta pode ser criada é o
       # hook Before User Created no Supabase (cadastro beta restrito).
       VITE_ENABLE_PUBLIC_SIGNUP: 'true'
+      # Site Key do Turnstile (pública; widget "Clínica Torricelli" no Cloudflare).
+      # A Secret Key fica só no Supabase (Auth → captcha), nunca aqui.
+      VITE_TURNSTILE_SITE_KEY: 0x4AAAAAAGInFuL76R_-sGXI
     steps:
       - uses: actions/checkout@v5
 
