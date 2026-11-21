@@ -74,7 +74,7 @@ export default function AdminBookings(){
   <strong>{when(i.starts_at)}–{clock(i.ends_at)} · {i.service.name} · {i.service.variant}</strong>
   <p>{customer(i.customer)}{i.reschedule_count>0?` · remarcado ${i.reschedule_count}×`:''}</p>
   <button disabled={busy} onClick={()=>ask({key:`${i.id}:cancel`,fn:'admin_cancel_appointment',args:n=>({p_id:i.id,p_note:n}),label:'Cancelar pela clínica',needsNote:true,
-   warning:'Cancelamento pela clínica não gera taxa. O sistema ainda não envia mensagens: avise a cliente pelo WhatsApp.',done:'Agendamento cancelado pela clínica. Avise a cliente.'})}>Cancelar pela clínica</button>{box(`${i.id}:cancel`)}
+   warning:'Cancelamento pela clínica não gera taxa. A cliente recebe um e-mail automático; se quiser, avise também pelo WhatsApp.',done:'Agendamento cancelado pela clínica. A cliente vai receber um e-mail.'})}>Cancelar pela clínica</button>{box(`${i.id}:cancel`)}
  </article>):<p>Nenhum agendamento futuro nos próximos 45 dias.</p>}
  {history.length>0&&<><h3>Histórico recente</h3>{history.map(i=><p key={i.id}>{when(i.starts_at)} · {i.service.name} · {i.customer.name||'Cliente'} · {statusLabel(i)}{i.fee?` · ${feeLabel(i.fee)}`:''}</p>)}</>}
  </section>;
