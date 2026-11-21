@@ -6,7 +6,7 @@ import {catalog,lateFee} from '../src/catalog.mjs';
 const migrations=readdirSync(new URL('../supabase/migrations/',import.meta.url)).filter(n=>n.endsWith('.sql')).sort();
 const questions=['pregnant_or_breastfeeding','previous_eye_procedure','cosmetic_allergy','eye_condition','cancer_treatment','wearing_mascara'];
 const intake=()=>({birth_date:'2000-01-01',sex:'prefer_not_to_say',address:'Endereço fictício',answers:Object.fromEntries(questions.map(k=>[k,{value:'no',details:''}])),signed_name:'Pessoa Fictícia',privacy_accepted:true,declaration_accepted:true,procedure_authorized:false,photo_record_authorized:false});
-const RULE='falta-rascunho-2026-11';
+const RULE='falta-2026-11-v1';
 async function fixture({enabled=true}={}){
  const pg=new PGlite({extensions:{btree_gist}});
  await pg.exec(`create role anon;create role authenticated;create role service_role bypassrls;create role supabase_auth_admin;

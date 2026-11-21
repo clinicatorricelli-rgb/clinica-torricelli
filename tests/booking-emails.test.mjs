@@ -6,7 +6,7 @@ import {createAvailabilityEmailHandler} from '../supabase/functions/_shared/avai
 // Pessoas e endereços são fictícios; nada sai para a rede.
 const migrations=readdirSync(new URL('../supabase/migrations/',import.meta.url)).filter(n=>n.endsWith('.sql')).sort();
 const questions=['pregnant_or_breastfeeding','previous_eye_procedure','cosmetic_allergy','eye_condition','cancer_treatment','wearing_mascara'];
-const RULE='falta-rascunho-2026-11';
+const RULE='falta-2026-11-v1';
 
 async function fixture(){
  const pg=new PGlite({extensions:{btree_gist}});

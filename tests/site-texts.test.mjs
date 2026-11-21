@@ -10,3 +10,10 @@ test('nenhuma tela fala em teste, dado fictício ou "em preparação"',()=>{
    assert.doesNotMatch(s,bad,`${f}: ${bad}`);
  }
 });
+
+test('regra de faltas em vigor não fala em rascunho nem em teste',()=>{
+ const sql=readFileSync(new URL('../supabase/migrations/202611210003_booking_rule_final.sql',import.meta.url),'utf8');
+ const body=sql.match(/\$rule\$([\s\S]*?)\$rule\$/)[1];
+ assert.doesNotMatch(body,/rascunho|teste|revisão jurídica/i);
+ assert.match(body,/24 horas/);assert.match(body,/30%/);assert.match(body,/1 hora/);
+});
