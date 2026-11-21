@@ -32,7 +32,7 @@ export default function AdminBookings(){
   <div className="actions"><button className="primary" disabled={busy}>{busy?'Aguarde…':pending.label}</button><button type="button" disabled={busy} onClick={()=>setPending(null)}>Voltar</button></div>
  </form>;
  const customer=c=><>{c.name||'Nome não informado'}{c.phone&&<> · <a href={whatsapp(c.phone)} target="_blank" rel="noopener noreferrer">{c.phone}</a></>}</>;
- if(failed)return <section className="admin-bookings"><p className="eyebrow">AGENDAMENTOS</p><h2>Reservas e taxas</h2><p role="status">Reservas ainda indisponíveis neste ambiente: a atualização do banco de dados está pendente.</p></section>;
+ if(failed)return <section className="admin-bookings"><p className="eyebrow">AGENDAMENTOS</p><h2>Reservas e taxas</h2><p role="status">Não foi possível carregar os agendamentos. Atualize a página.</p></section>;
  if(!data)return <section className="admin-bookings"><p role="status">Consultando agendamentos…</p></section>;
  const now=Date.now();
  const toMark=data.items.filter(i=>i.status==='confirmed'&&Date.parse(i.starts_at)<=now);
@@ -43,7 +43,7 @@ export default function AdminBookings(){
  <div className="booking-switch"><p>Agendamento online: <strong>{data.enabled?'ligado':'desligado'}</strong>. Regra em vigor: {data.rule_version||'nenhuma'}.</p>
   <button disabled={busy} onClick={()=>ask({key:'switch',fn:'admin_set_booking_enabled',args:()=>({p_enabled:!data.enabled}),note:false,
    label:data.enabled?'Desligar agendamento online':'Ligar agendamento online',
-   warning:data.enabled?'Novos agendamentos param na hora. Os já marcados continuam valendo.':'A regra de faltas ainda é um rascunho sem revisão jurídica e nenhuma mensagem automática está ativa. Ligue só para testes com dados fictícios.',
+   warning:data.enabled?'Novos agendamentos param na hora. Os já marcados continuam valendo.':'As clientes passam a poder agendar pelo site, seguindo a regra de faltas em vigor.',
    done:data.enabled?'Agendamento online desligado.':'Agendamento online ligado.'})}>{data.enabled?'Desligar':'Ligar'} agendamento online</button>{box('switch')}
   <p>Antecedência mínima para agendar: <strong>{duration(data.min_notice_minutes)}</strong>. Máximo de agendamentos futuros por cliente: <strong>{data.max_future_bookings}</strong>.</p>
   {!limits?<button disabled={busy} onClick={()=>{setLimits({notice:data.min_notice_minutes,max:data.max_future_bookings});setMessage('');}}>Alterar limites</button>

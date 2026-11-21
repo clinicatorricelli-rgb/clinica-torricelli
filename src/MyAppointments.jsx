@@ -29,7 +29,7 @@ export default function MyAppointments({userId,version=0,onChanged=()=>{},onBook
  return <section className="my-appointments" aria-labelledby="my-appointments-title"><h2 id="my-appointments-title">Meus agendamentos</h2>
  {message&&<p className="message" role="status">{message}</p>}
  {failed?<p role="alert">Não foi possível carregar seus agendamentos. Atualize a página.</p>
- :legacy?(legacy.length?legacy.map(a=><p key={a.id}>{when(a.starts_at)} · {a.status}</p>):<p>Nenhum agendamento disponível. A agenda está em preparação.</p>)
+ :legacy?(legacy.length?legacy.map(a=><p key={a.id}>{when(a.starts_at)} · {a.status}</p>):<p>Você ainda não tem agendamentos.</p>)
  :!data?<p role="status">Carregando seus agendamentos…</p>
  :<>
   {data.open_fee_cents>0&&<div className="fee-alert" role="alert"><strong>Taxa em aberto: {money(data.open_fee_cents)}.</strong> Novos agendamentos pelo site ficam bloqueados até a clínica dar baixa. A clínica vai combinar o pagamento com você pelo WhatsApp.</div>}

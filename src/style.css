@@ -33,8 +33,19 @@ nav [aria-current]{background:var(--rose);color:var(--wine-dark)}
 .eyebrow{color:var(--wine)}
 em{color:var(--wine)}
 .notice{background:var(--nude)}
-.page{animation:page-in .45s cubic-bezier(.2,.7,.2,1) both}
-@keyframes page-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.page{view-transition-name:page}
+/* Sem View Transitions: a tela nova entra deslizando */
+@supports not (view-transition-name:none){.page.enter-forward{animation:slide-from-right .5s cubic-bezier(.2,.7,.2,1) both}.page.enter-back{animation:slide-from-left .5s cubic-bezier(.2,.7,.2,1) both}}
+/* Com View Transitions: a tela atual sai para um lado enquanto a nova entra pelo outro */
+::view-transition-old(page){animation:slide-to-left .42s cubic-bezier(.4,0,.2,1) both}
+::view-transition-new(page){animation:slide-from-right .52s cubic-bezier(.2,.7,.2,1) both}
+html[data-nav=back]::view-transition-old(page){animation-name:slide-to-right}
+html[data-nav=back]::view-transition-new(page){animation-name:slide-from-left}
+@keyframes slide-from-right{from{opacity:0;transform:translateX(72px)}to{opacity:1;transform:none}}
+@keyframes slide-from-left{from{opacity:0;transform:translateX(-72px)}to{opacity:1;transform:none}}
+@keyframes slide-to-left{to{opacity:0;transform:translateX(-72px)}}
+@keyframes slide-to-right{to{opacity:0;transform:translateX(72px)}}
+
 /* Abertura: texto e chamada à esquerda, fotos à direita; no celular, fotos entre o texto e o botão */
 .hero{grid-template-columns:1.05fr 1fr;grid-template-areas:"text media" "cta media";gap:10px 70px;align-items:end}
 .hero-text{grid-area:text}.hero-cta{grid-area:cta;align-self:start}.results{grid-area:media}
@@ -69,5 +80,5 @@ em{color:var(--wine)}
  .results-frame{max-width:none;border-radius:200px 200px 24px 24px;box-shadow:0 0 0 8px var(--nude),0 24px 50px -30px rgba(59,42,34,.45)}
  .hero-cta .primary{width:100%}
 }
-@media(prefers-reduced-motion:reduce){.page,.service-card,.results figcaption{animation:none}.results-frame img.on{animation:none;transform:none}.service-card:hover,.primary:hover:not(:disabled){transform:none}}
+@media(prefers-reduced-motion:reduce){::view-transition-old(page),::view-transition-new(page){animation:none}.page,.service-card,.results figcaption{animation:none}.results-frame img.on{animation:none;transform:none}.service-card:hover,.primary:hover:not(:disabled){transform:none}}
 .results.still .results-frame img.on{animation:none;transform:none}

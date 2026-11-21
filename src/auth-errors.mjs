@@ -1,5 +1,5 @@
 export function authError(error){
- if(error?.message?.includes('Cadastro de testes disponível somente para endereços previamente autorizados.'))return 'Este e-mail ainda não está autorizado para o cadastro de testes.';
+ if(error?.message?.includes('Cadastro de testes disponível somente para endereços previamente autorizados.'))return 'O cadastro de novas clientes está temporariamente fechado. Fale com a clínica pelo WhatsApp.';
  switch(error?.code){
   case 'email_not_confirmed':return 'Confirme seu cadastro pelo link enviado ao seu e-mail antes de entrar.';
   case 'mfa_verification_failed':return 'Código do autenticador não conferiu. Use o código atual da conta Clínica Torriceli no aplicativo, com data e hora automáticas no celular.';
