@@ -32,8 +32,9 @@ export default function MyAppointments({userId,version=0,onChanged=()=>{},onBook
  :legacy?(legacy.length?legacy.map(a=><p key={a.id}>{when(a.starts_at)} · {a.status}</p>):<p>Você ainda não tem agendamentos.</p>)
  :!data?<p role="status">Carregando seus agendamentos…</p>
  :<>
-  {data.open_fee_cents>0&&<div className="fee-alert" role="alert"><strong>Taxa em aberto: {money(data.open_fee_cents)}.</strong> Novos agendamentos pelo site ficam bloqueados até a clínica dar baixa. A clínica vai combinar o pagamento com você pelo WhatsApp.</div>}
-  {data.items.length?data.items.map(item=><article className="appointment-card" key={item.id}>
+  {data.open_fee_cents>0&&<div className="fee-alert" role="alert"><strong>Taxa em aberto: {money(data.open_fee_cents)}.</strong> Novos agendamentos pelo site ficam bloqueados até a clínica dar baixa. A clínica vai combinar o pagamento com você pelo WhatsApp ou e-mail.</div>}
+  {(()=>{const now=Date.now(),upcoming=data.items.filter(i=>i.status==='confirmed'&&Date.parse(i.ends_at)>now).sort((a,b)=>a.starts_at.localeCompare(b.starts_at)),history=data.items.filter(i=>!upcoming.includes(i)).sort((a,b)=>b.starts_at.localeCompare(a.starts_at));
+   const card=item=><article className="appointment-card" key={item.id}>
    <p className="eyebrow">{statusLabel(item)}</p><h3>{item.service.name} · {item.service.variant}</h3>
    <p>{when(item.starts_at)} até {clock(item.ends_at)} · {money(item.price_cents)}</p>
    {item.fee&&<p className="fee-line">{feeLabel(item.fee)}</p>}
@@ -46,7 +47,9 @@ export default function MyAppointments({userId,version=0,onChanged=()=>{},onBook
     {pick&&<p>Novo horário: <strong>{when(pick.starts_at)}</strong>. A regra aceita no agendamento continua valendo.</p>}
     <div className="actions">{pick&&<button className="primary" disabled={busy} onClick={()=>move(item,pick)}>{busy?'Aguarde…':'Confirmar remarcação'}</button>}<button disabled={busy} onClick={()=>setAction(null)}>Voltar</button></div>
    </div>}
-  </article>):<p>Nenhum agendamento ainda.{data.booking_enabled&&<> <button className="inline-link" onClick={onBook}>Ver horários disponíveis</button></>}</p>}
+  </article>;
+   return <><h3 className="appointments-group">Próximos</h3>{upcoming.length?upcoming.map(card):<p>Nenhum horário marcado.{data.booking_enabled&&<> <button className="inline-link" onClick={onBook}>Ver horários disponíveis</button></>}</p>}
+    {history.length>0&&<details className="appointments-history"><summary>Histórico ({history.length})</summary>{history.map(card)}</details>}</>;})()}
  </>}
  </section>;
 }

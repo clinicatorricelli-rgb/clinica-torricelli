@@ -37,7 +37,7 @@ export function AvailabilityPreview({selectedService=1,session=null,booking=null
   <label className="accept"><input type="checkbox" checked={accepted} onChange={e=>setAccepted(e.target.checked)} required/><span>Li e aceito a regra de faltas e cancelamentos acima.</span></label>
   <div className="actions"><button className="primary" disabled={!accepted||busy}>{busy?'Aguarde…':'Confirmar agendamento'}</button><button type="button" onClick={()=>setChosen(null)} disabled={busy}>Escolher outro horário</button></div>
  </form>}
- {result&&<div className="message" role={result.ok?'status':'alert'}>{result.text}{['intake_required','profile_incomplete','outstanding_fee'].includes(result.reason)&&<> <button type="button" className="inline-link" onClick={onAccount}>Ir para Minha conta</button></>}</div>}
+ {result&&<div className="message" role={result.ok?'status':'alert'}>{result.text}{['intake_required','profile_incomplete','outstanding_fee'].includes(result.reason)&&<> <button type="button" className="inline-link" onClick={()=>onAccount(result.reason)}>Ir para Minha conta</button></>}</div>}
  </section>;
 }
 export default function AvailabilityPanel(){

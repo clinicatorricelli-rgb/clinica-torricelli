@@ -6,7 +6,7 @@ const files=readdirSync(dir).filter(f=>/\.(jsx|mjs)$/.test(f)&&!['legal.mjs','au
 test('nenhuma tela fala em teste, dado fictício ou "em preparação"',()=>{
  for(const f of files){
   const s=readFileSync(new URL(f,dir),'utf8');
-  for(const bad of [/fictíci/i,/de testes/i,/ambiente de testes/i,/em preparação/i,/próxima etapa/i,/horários de teste/i,/em outra etapa/i,/informados em breve/i,/ainda não envia mensagens/i,/ainda não estão ativas/i])
+  for(const bad of [/fictíci/i,/de testes/i,/ambiente de testes/i,/em preparação/i,/próxima etapa/i,/horários de teste/i,/em outra etapa/i,/informados em breve/i,/ainda não envia mensagens/i,/ainda não estão ativas/i,/em configuração/i,/new-availability-v1\. /i])
    assert.doesNotMatch(s,bad,`${f}: ${bad}`);
  }
 });
