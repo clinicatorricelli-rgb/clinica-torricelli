@@ -41,10 +41,10 @@ em{color:var(--wine)}
 .hero-tags{font-size:10px;letter-spacing:2.5px;color:var(--gold);margin-top:22px}
 .results{margin:0;display:grid;gap:12px;justify-items:center}
 .results-frame{position:relative;width:100%;max-width:470px;aspect-ratio:4/5;overflow:hidden;border-radius:240px 240px 28px 28px;background:var(--nude);box-shadow:0 0 0 12px var(--nude),0 30px 60px -30px rgba(59,42,34,.45)}
-.results-frame img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.04);transition:opacity 1.1s ease}
-.results-frame img.on{opacity:1;animation:slow-zoom 6s ease-out both}
-@keyframes slow-zoom{from{transform:scale(1.04)}to{transform:scale(1.13)}}
-.results figcaption{position:absolute;left:18px;bottom:18px;background:rgba(255,250,246,.92);color:var(--wine-dark);font-size:12px;font-weight:700;letter-spacing:.5px;padding:7px 14px;border-radius:999px;animation:cap-in .6s ease both;backdrop-filter:blur(6px)}
+.results-frame img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.04);transition:opacity .5s ease}
+.results-frame img.on{opacity:1;animation:slow-zoom 2.2s ease-out both}
+@keyframes slow-zoom{from{transform:scale(1.04)}to{transform:scale(1.09)}}
+.results figcaption{position:absolute;left:18px;bottom:18px;background:rgba(255,250,246,.92);color:var(--wine-dark);font-size:12px;font-weight:700;letter-spacing:.5px;padding:7px 14px;border-radius:999px;animation:cap-in .35s ease both;backdrop-filter:blur(6px)}
 @keyframes cap-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .results-controls{display:flex;align-items:center;gap:12px}
 .results-dots{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}

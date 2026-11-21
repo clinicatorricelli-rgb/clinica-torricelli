@@ -16,21 +16,26 @@ export const slides=[
  {src:'/media/resultados/cilios-07.webp',label:'Extensão de cílios',pos:'55% 50%'},
  {src:'/media/resultados/cilios-08.webp',label:'Extensão de cílios',pos:'55% 50%'},
 ];
-const INTERVAL=4500;
+// Cada foto fica 1,5 s (pedido do usuário em 21/11); com "reduzir movimento", 3 s.
+const INTERVAL=1500;
 
 // Troca as fotos sozinha, com transição suave. Para quando a pessoa passa o mouse,
 // toca nos pontinhos ou pede para pausar; sem zoom para quem prefere menos movimento.
 export default function ResultsCarousel({reduced}){
  const [index,setIndex]=useState(0),[paused,setPaused]=useState(false),[hover,setHover]=useState(false);
- const touch=useRef(null);
+ const touch=useRef(null),[loaded,setLoaded]=useState(()=>new Set());
  const go=n=>setIndex((n+slides.length)%slides.length);
- useEffect(()=>{if(paused||hover)return;const t=setTimeout(()=>go(index+1),reduced?INTERVAL*1.5:INTERVAL);return()=>clearTimeout(t);},[index,paused,hover,reduced]);
+ // Na troca automática, pula fotos que ainda não carregaram (internet lenta), para a moldura nunca ficar vazia.
+ const nextLoaded=()=>{for(let k=1;k<=slides.length;k++){const i=(index+k)%slides.length;if(loaded.has(i))return i;}return index;};
+ useEffect(()=>{if(paused||hover)return;const t=setTimeout(()=>setIndex(nextLoaded()),reduced?INTERVAL*2:INTERVAL);return()=>clearTimeout(t);},[index,paused,hover,reduced,loaded]);
  return <figure className={`results${reduced?' still':''}`} aria-roledescription="carrossel" aria-label="Resultados de procedimentos da Clínica Torricelli"
   onMouseEnter={()=>setHover(true)} onMouseLeave={()=>setHover(false)} onFocus={()=>setHover(true)} onBlur={()=>setHover(false)}
   onTouchStart={e=>{touch.current=e.touches[0].clientX;}} onTouchEnd={e=>{const dx=e.changedTouches[0].clientX-(touch.current??0);if(Math.abs(dx)>40)go(index+(dx<0?1:-1));touch.current=null;}}>
   <div className="results-frame">
    {slides.map((s,i)=><img key={s.src} src={s.src} alt={`${s.label}: resultado finalizado na Clínica Torricelli`} className={i===index?'on':''}
-    style={{objectPosition:s.pos}} loading={i<2?'eager':'lazy'} fetchpriority={i===0?'high':'low'} decoding="async" aria-hidden={i!==index}/>)}
+    style={{objectPosition:s.pos}} loading={i<2?'eager':'lazy'} fetchpriority={i===0?'high':'low'} decoding="async" aria-hidden={i!==index}
+    ref={el=>{if(el?.complete&&el.naturalWidth&&!loaded.has(i))setLoaded(prev=>new Set(prev).add(i));}}
+    onLoad={()=>setLoaded(prev=>prev.has(i)?prev:new Set(prev).add(i))}/>)}
    <figcaption key={index}>{slides[index].label}</figcaption>
   </div>
   <div className="results-controls">

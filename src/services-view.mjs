@@ -18,7 +18,7 @@ const KEYWORDS = {
 
 export function groupServices(rows) {
  const groups = new Map();
- for (const row of rows) {
+ for (const row of Array.isArray(rows) ? rows : []) {
   if (!groups.has(row.name)) groups.set(row.name, {name: row.name, options: []});
   groups.get(row.name).options.push(row);
  }
