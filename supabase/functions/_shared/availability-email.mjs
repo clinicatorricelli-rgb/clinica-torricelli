@@ -1,4 +1,5 @@
 import { timingSafeEqual } from 'node:crypto';
+import { processBookingEmails } from './booking-email.mjs';
 
 // Links in e-mails point to the clinic's own domain. The previous Pages address
 // keeps working, so its pages may still call the unsubscribe endpoint.
@@ -143,6 +144,13 @@ export function createAvailabilityEmailHandler({db, fetchImpl = fetch, cronSecre
         return json({status: 'provider_not_configured'}, 503);
       }
       await db.markProviderReady(true);
+      // Booking confirmations go first and in isolation: a failure there never blocks
+      // the availability alerts below, and vice versa.
+      let booking;
+      if (typeof db.prepareBookingEmail === 'function') {
+        try { booking = await processBookingEmails({db, resendKey, fetchImpl}); } catch { booking = 'temporarily_unavailable'; }
+      }
+      const withBooking = status => json(booking === undefined ? {status} : {status, booking});
       // Enqueue commits before preparation: publication materialization can
       // lock delivery rows, while dispatch/revocation lock preferences first.
       await db.enqueue();
@@ -155,7 +163,7 @@ export function createAvailabilityEmailHandler({db, fetchImpl = fetch, cronSecre
         if(!job.payload) await tx.freezePayload(job.id, buildAvailabilityEmail(job, supabaseUrl));
         return {id:job.id,to:job.to};
       });
-      if(!prepared) return json({status:'idle'});
+      if(!prepared) return withBooking('idle');
       const status = await db.withDeliveryTransaction(async tx => {
         const job = await tx.claim(prepared.id);
         if (!job) return 'idle';
@@ -168,7 +176,7 @@ export function createAvailabilityEmailHandler({db, fetchImpl = fetch, cronSecre
         await tx.finish(job.id, result.outcome, result.providerId, result.code);
         return result.outcome;
       });
-      return json({status});
+      return withBooking(status);
     } catch (error) {
       return json({error: error?.message === 'request_too_large' ? 'request_too_large' : 'temporarily_unavailable'}, error?.message === 'request_too_large' ? 413 : 503,corsHeaders);
     }

@@ -11,9 +11,11 @@ export default function AlertPreferences({userId}){
  },[userId]);
  async function save(channel){setBusy(true);setMessage('');const enabled=!values[channel];
   try{const {error}=await supabase.rpc('set_availability_alert_preference',{channel,enabled,notice_version:'new-availability-v1'});if(error)throw error;
-   setValues(v=>({...v,[channel]:enabled}));setMessage(enabled?'Preferência ativada. Os avisos seguem a disponibilidade do canal.':'Avisos desligados neste canal.');
+   setValues(v=>({...v,[channel]:enabled}));setMessage(enabled?'Pronto: você vai receber os avisos de novas vagas.':'Avisos de novas vagas desligados.');
   }catch{setMessage('Não foi possível salvar. Sua preferência não foi alterada nesta tela. Recarregue para conferir.');}finally{setBusy(false);}
  }
- return <section className="alert-preferences"><h2>Avisos de novas vagas</h2><p>Quero receber avisos opcionais de novas vagas da Clínica Torriceli por este canal, incluindo manhãs abertas em datas específicas. Posso desligar a qualquer momento em Minha conta. O aviso não garante reserva. Não é necessário aceitar para cadastrar ou agendar.</p><small>Finalidade: novas vagas · versão new-availability-v1. {channels.email?'Avisos por e-mail disponíveis, no máximo um por dia, das 8h às 20h.':'Envio de avisos por e-mail em configuração.'} WhatsApp ainda em preparação. Separado das confirmações do seu atendimento.</small><div className="tabs">{[['email','E-mail'],['whatsapp','WhatsApp']].map(([channel,label])=><label key={channel}><input type="checkbox" disabled={!ready||busy} checked={values[channel]} onChange={()=>save(channel)}/> Receber avisos por {label}</label>)}</div><p role="status">{message}</p></section>;
+ // Só aparecem os canais que a clínica já envia (ou que a cliente ligou antes, para poder desligar).
+ const shown=[['email','e-mail'],['whatsapp','WhatsApp']].filter(([c])=>channels[c]||values[c]);
+ return <section className="alert-preferences"><h2>Avisos de novas vagas</h2><p>Receba um aviso quando a Eduarda abrir novos horários, inclusive manhãs abertas em datas específicas. No máximo um por dia, das 8h às 20h. O aviso não reserva horário e você pode desligar quando quiser.</p>{shown.length?<div className="tabs">{shown.map(([channel,label])=><label key={channel}><input type="checkbox" disabled={!ready||busy} checked={values[channel]} onChange={()=>save(channel)}/> Receber avisos por {label}</label>)}</div>:<p>{ready?'Os avisos de novas vagas estão pausados no momento.':'Carregando…'}</p>}<small>Os e-mails sobre os seus agendamentos (confirmação, remarcação e cancelamento) chegam sempre, com ou sem esta opção.</small><p role="status">{message}</p></section>;
 }
 

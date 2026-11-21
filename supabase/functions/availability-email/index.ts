@@ -40,6 +40,16 @@ const db = {
       },
     }));
   },
+  // E-mails de agendamento (cliente e clínica). Cada chamada é uma transação curta.
+  async prepareBookingEmail() {
+    if (!sql) throw new Error('database_not_configured');
+    const [row] = await sql`select private.prepare_booking_email() as job`;
+    return row.job;
+  },
+  async finishBookingEmail(id: string, outcome: string, providerId: string | null, code: string | null) {
+    if (!sql) throw new Error('database_not_configured');
+    await sql`select private.finish_booking_email(${id}::uuid,${outcome}::text,${providerId}::text,${code}::text)`;
+  },
   async unsubscribe(token: string) {
     if (!sql) throw new Error('database_not_configured');
     const [row] = await sql`select private.unsubscribe_availability_email(${token}::text) as revoked`;

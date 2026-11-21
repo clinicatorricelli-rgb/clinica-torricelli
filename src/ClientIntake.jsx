@@ -62,7 +62,7 @@ export default function ClientIntake({userId,profile,email}){
    if(error)throw error;if(activeUser.current!==savingUser)return;
    const saved=Array.isArray(data)?data[0]:data;
    if(!saved||!Number.isInteger(saved.revision))throw new Error('Unconfirmed save');
-   setRecord(saved);setForm(formFrom(saved));setMessage('Ficha de testes salva. Para um novo envio, revise as respostas e refaça a confirmação sobre rímel, as declarações e o nome de confirmação.');
+   setRecord(saved);setForm(formFrom(saved));setMessage('Ficha salva. Para um novo envio, revise as respostas e refaça a confirmação sobre rímel, as declarações e o nome de confirmação.');
   }catch(error){
    if(activeUser.current!==savingUser)return;
    const changed=['40001','PT409'].includes(error?.code);setConflict(changed);
@@ -70,9 +70,9 @@ export default function ClientIntake({userId,profile,email}){
   }finally{if(activeUser.current===savingUser)setSaving(false);}
  }
  return <section className="intake-card intake-client" aria-labelledby={`${prefix}-title`}>
-  <div className="intake-heading"><p className="eyebrow">SEU ATENDIMENTO</p><span className="intake-badge">Ficha de testes</span><h2 id={`${prefix}-title`}>Ficha de atendimento</h2><p><strong>Extensão de cílios</strong></p><p>Preencha uma vez e revise nas próximas visitas. As informações salvas serão reaproveitadas; o que pode mudar no dia precisa ser confirmado novamente.</p></div>
-  <div className="intake-test-notice" role="note" id={`${prefix}-notice`}><strong>Ficha de testes. Use somente dados fictícios.</strong><p>Não informe dados reais de saúde neste ambiente. O salvamento não cria uma reserva nem libera um procedimento.</p></div>
-  {!supabase||!userId?<p>Entre com sua conta no ambiente conectado para preencher a ficha de testes.</p>:loading||(!loadError&&loadedUser!==userId)?<p role="status">Carregando sua ficha…</p>:loadError?<div className="intake-message" role="alert"><p>Não foi possível consultar sua ficha. Confira sua sessão e tente novamente.</p><button type="button" onClick={()=>setReload(value=>value+1)}>Tentar novamente</button></div>:<>
+  <div className="intake-heading"><p className="eyebrow">SEU ATENDIMENTO</p><span className="intake-badge">Confidencial</span><h2 id={`${prefix}-title`}>Ficha de atendimento</h2><p><strong>Extensão de cílios</strong></p><p>Preencha uma vez e revise nas próximas visitas. As informações salvas serão reaproveitadas; o que pode mudar no dia precisa ser confirmado novamente.</p></div>
+  <div className="intake-test-notice" role="note" id={`${prefix}-notice`}><strong>Suas respostas são confidenciais.</strong><p>Só você e a Eduarda veem esta ficha. Ela serve para avaliar se o procedimento é seguro para você e não substitui avaliação médica. Salvar a ficha não marca horário.</p></div>
+  {!supabase||!userId?<p>Entre com sua conta para preencher a ficha.</p>:loading||(!loadError&&loadedUser!==userId)?<p role="status">Carregando sua ficha…</p>:loadError?<div className="intake-message" role="alert"><p>Não foi possível consultar sua ficha. Confira sua sessão e tente novamente.</p><button type="button" onClick={()=>setReload(value=>value+1)}>Tentar novamente</button></div>:<>
    {record&&<p className="intake-saved">Último envio: {formatIntakeTimestamp(record.submitted_at)} · revisão {record.revision}. Confira se as respostas continuam atuais. A resposta sobre rímel e as confirmações abaixo precisam ser refeitas.</p>}
    <form onSubmit={save} aria-describedby={`${prefix}-notice`}>
     <fieldset disabled={saving} className="intake-fieldset"><legend>1. Dados pessoais</legend><p className="intake-help">Nome, telefone e e-mail vêm do seu cadastro. Para alterá-los, use os campos do cadastro acima ou as opções da sua conta.</p>
@@ -82,22 +82,22 @@ export default function ClientIntake({userId,profile,email}){
       <label className="intake-wide">Endereço (opcional)<textarea rows={2} maxLength={500} autoComplete="off" value={form.address} onChange={event=>change('address',event.target.value)}/></label>
      </div>
     </fieldset>
-    <fieldset disabled={saving} className="intake-fieldset"><legend>2. Avaliação informada pela cliente</legend><p className="intake-help">Responda às seis perguntas com informações fictícias. Se preferir esclarecer algum ponto durante a avaliação, selecione conversar com a profissional.</p>
+    <fieldset disabled={saving} className="intake-fieldset"><legend>2. Avaliação informada pela cliente</legend><p className="intake-help">Responda às seis perguntas com sinceridade. Se preferir esclarecer algum ponto durante a avaliação, selecione conversar com a profissional.</p>
      {intakeQuestions.map(({key,label,visitSpecific,detailsLabel},index)=><div className="intake-question" key={key}>
       <label htmlFor={`${prefix}-${key}`}><span className="intake-question-number">{String(index+1).padStart(2,'0')}</span>{label}{visitSpecific&&<small>Resposta referente ao dia do atendimento. Confirme a cada visita.</small>}</label>
       <select id={`${prefix}-${key}`} required value={form.answers[key].value} onChange={event=>changeAnswer(key,event.target.value)}><option value="" disabled>Selecione uma resposta</option>{Object.entries(intakeAnswerLabels).map(([value,text])=><option value={value} key={value}>{text}</option>)}</select>
-      {['yes','discuss'].includes(form.answers[key].value)&&<label className="intake-detail">{detailsLabel&&form.answers[key].value==='yes'?`${detailsLabel} (informação fictícia, opcional)`:'Observação fictícia (opcional)'}<textarea rows={2} maxLength={500} value={form.answers[key].details} onChange={event=>changeDetails(key,event.target.value)}/><small>Até 500 caracteres. Não informe dados reais de saúde.</small></label>}
+      {['yes','discuss'].includes(form.answers[key].value)&&<label className="intake-detail">{detailsLabel&&form.answers[key].value==='yes'?`${detailsLabel} (opcional)`:'Observação (opcional)'}<textarea rows={2} maxLength={500} value={form.answers[key].details} onChange={event=>changeDetails(key,event.target.value)}/><small>Até 500 caracteres. Não informe dados reais de saúde.</small></label>}
      </div>)}
     </fieldset>
     <fieldset disabled={saving} className="intake-fieldset"><legend>3. Declaração e autorizações</legend><p className="intake-help">Cada escolha é independente. As duas primeiras confirmações e o nome da declaração são necessários para enviar a ficha. Procedimento e registro de fotos são opcionais.</p>
-     <label className="intake-choice"><input type="checkbox" required checked={form.privacy_accepted} onChange={event=>change('privacy_accepted',event.target.checked)}/><span>Entendi que esta ficha está em ambiente de testes e autorizo o registro das informações fictícias que forneci para validar o sistema.</span></label>
+     <label className="intake-choice"><input type="checkbox" required checked={form.privacy_accepted} onChange={event=>change('privacy_accepted',event.target.checked)}/><span>Autorizo a Clínica Torricelli a usar as informações de saúde desta ficha para avaliar e realizar o procedimento com segurança, conforme o <a href="?view=privacidade" target="_blank" rel="noopener">Aviso de privacidade</a>.</span></label>
      <label className="intake-choice"><input type="checkbox" required checked={form.declaration_accepted} onChange={event=>change('declaration_accepted',event.target.checked)}/><span>Revisei as respostas acima e estou ciente de que mudanças devem ser informadas à profissional antes de cada atendimento.</span></label>
      <label className="intake-choice"><input type="checkbox" checked={form.procedure_authorized} onChange={event=>change('procedure_authorized',event.target.checked)}/><span>Autorizo a realização do procedimento após a avaliação e os esclarecimentos da profissional. <small>Opcional. Esta escolha não representa aprovação para realizar o procedimento.</small></span></label>
      <label className="intake-choice"><input type="checkbox" checked={form.photo_record_authorized} onChange={event=>change('photo_record_authorized',event.target.checked)}/><span>Autorizo o registro de fotos do procedimento para acompanhamento interno. <small>Opcional. Não autoriza publicação ou divulgação em redes sociais.</small></span></label>
      <label>Nome para confirmar a declaração<input required minLength={1} maxLength={100} autoComplete="off" value={form.signed_name} onChange={event=>change('signed_name',event.target.value)}/><small>Digite novamente seu nome para confirmar as declarações deste envio. Data e horário são registrados pelo sistema.</small></label>
     </fieldset>
     <p className="intake-help">A ficha será consultada pela profissional autorizada. A avaliação e a decisão sobre o atendimento permanecem com ela.</p>
-    <button className="primary" type="submit" disabled={saving||conflict}>{saving?'Salvando ficha…':record?'Salvar e reconfirmar ficha':'Salvar ficha de testes'}</button>
+    <button className="primary" type="submit" disabled={saving||conflict}>{saving?'Salvando ficha…':record?'Salvar e reconfirmar ficha':'Salvar ficha'}</button>
    </form>
    {message&&<div className="intake-message" role={conflict?'alert':'status'}><p>{message}</p>{conflict&&<><button type="button" disabled={saving} onClick={()=>setReload(value=>value+1)}>Recarregar ficha salva</button><small>Isso substitui o que está nesta tela pelos dados já salvos.</small></>}</div>}
   </>}
