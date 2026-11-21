@@ -82,3 +82,22 @@ html[data-nav=back]::view-transition-new(page){animation-name:slide-from-left}
 }
 @media(prefers-reduced-motion:reduce){::view-transition-old(page),::view-transition-new(page){animation:none}.page,.service-card,.results figcaption{animation:none}.results-frame img.on{animation:none;transform:none}.service-card:hover,.primary:hover:not(:disabled){transform:none}}
 .results.still .results-frame img.on{animation:none;transform:none}
+/* Agenda da Eduarda */
+.agenda{padding:30px 0 40px;display:grid;gap:12px}
+.agenda h2{margin:0}
+.agenda-list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.agenda-item{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;padding:10px 12px;border-radius:12px;background:#fffdfa;border:1px solid #eadfd4}
+.agenda-time{grid-row:span 3;font-weight:700;color:var(--wine);font-variant-numeric:tabular-nums;white-space:nowrap}
+.agenda-who{font-size:14px;color:#6d5a46}.agenda-who a{color:var(--wine-dark);font-weight:700}
+.agenda-status{font-size:12px;font-weight:700;color:#6d5a46}
+.agenda-item.is-cancelled{opacity:.55}.agenda-item.is-cancelled .agenda-what{text-decoration:line-through}
+.agenda-today .agenda-item{background:var(--nude);border-color:var(--rose)}
+.agenda-week-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-top:18px}
+.agenda-week-head h3{margin:0}
+.agenda-week{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.agenda-day{border:1px solid #eadfd4;border-radius:16px;padding:14px;background:#fffdfa;display:grid;gap:10px;align-content:start;min-width:0}
+.agenda-day h4{margin:0;font-family:Georgia,serif;font-size:17px;text-transform:capitalize;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.agenda-day h4 span{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:#8c6e4d;text-transform:none}
+.agenda-day.is-today{border-color:var(--wine);box-shadow:0 0 0 2px var(--rose)}
+@media(max-width:900px){.agenda-week{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.agenda-week{grid-template-columns:1fr}}
