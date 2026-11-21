@@ -24,5 +24,8 @@ test('a busca acha qualquer serviço, sem depender de acento ou maiúscula',()=>
  assert.ok(visibleGroups(groups,'volume').length>=3);
  assert.deepEqual(visibleGroups(groups,'capping manutencao').map(g=>g.name),['Capping Cleópatra','Capping Brasileiro']);
  assert.deepEqual(visibleGroups(groups,'xyz'),[]);
+ assert.deepEqual(visibleGroups(groups,'lábios').map(g=>g.name).sort(),['Hydra Gloss','Micropigmentação Labial']);
+ assert.ok(visibleGroups(groups,'sobrancelha').length>=3,'design, henna e brow lamination');
+ assert.ok(visibleGroups(groups,'cilios').length>=8,'todas as técnicas de cílios');
  assert.equal(normalize(' Micropigmentação '),'micropigmentacao');
 });
