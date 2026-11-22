@@ -132,3 +132,21 @@ footer,.intro{background:var(--cream-deep)}footer{border-top-color:var(--champag
 footer p{margin-inline:auto}main a:not(.brand){color:var(--gold-text)}main a:not(.brand):hover{color:var(--brown)}
 .account section{padding-inline:0}.alert-preferences small{margin-top:8px}
 .account .my-appointments{padding-top:12px;margin-top:12px}
+/* Janela de aviso no meio da tela */
+.popup{border:0;border-radius:22px;padding:0;max-width:min(460px,calc(100vw - 32px));width:100%;background:#fffaf3;color:var(--text);box-shadow:0 30px 80px -30px rgba(47,22,6,.55)}
+.popup::backdrop{background:rgba(47,22,6,.45);backdrop-filter:blur(3px)}
+.popup-body{padding:28px 26px 22px;border-top:4px solid var(--gold);border-radius:22px}
+.popup h2{margin:0 0 10px;font-size:32px}.popup p{margin:0 0 10px;font-size:16px}
+.popup .actions{margin-top:18px}.popup .actions .primary{margin:0}
+.popup-check{margin:14px 0 0;font-weight:500;font-size:14px}
+.popup[open]{animation:popup-in .28s cubic-bezier(.2,.7,.2,1) both}
+@keyframes popup-in{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+@media(max-width:700px){.popup .actions button{width:100%}}
+@media(prefers-reduced-motion:reduce){.popup[open]{animation:none}}
+/* Contas no painel */
+.admin-accounts{padding:35px 0;border-top:1px solid #d7c9b7;margin-top:28px}
+.account-list{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.account-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--champagne);border-radius:12px;background:#fffdfa}
+.account-row>div{display:grid;gap:2px;min-width:0}.account-row span{font-size:14px;overflow-wrap:anywhere}.account-row small{font-size:12px;opacity:.85}
+.account-row .confirm-box{flex-basis:100%;margin:6px 0 0}
+.primary.danger{background:#8f2d22;border-color:#8f2d22}.primary.danger:hover:not(:disabled){background:#6f2018}

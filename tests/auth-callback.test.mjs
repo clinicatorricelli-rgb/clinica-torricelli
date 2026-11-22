@@ -9,3 +9,10 @@ test('convite e recovery verificados exigem definição de senha, sem conceder p
  assert.deepEqual(emailCallback('','#access_token=ficticio&refresh_token=ficticio-refresh&type=invite'),{kind:'session',access_token:'ficticio',refresh_token:'ficticio-refresh',requiresPassword:true});
  assert.throws(()=>emailCallback('','#access_token=ficticio&type=invite'),/Unsupported/);
 });
+
+test('link vencido ou já usado vira aviso, sem tentar entrar',()=>{
+ assert.deepEqual(emailCallback('','#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid'),{kind:'error',code:'otp_expired'});
+ assert.deepEqual(emailCallback('?error=access_denied&error_description=x'),{kind:'error',code:'access_denied'});
+ assert.deepEqual(emailCallback('','#error_code=<script>'),{kind:'error',code:'unknown'});
+ assert.equal(emailCallback('','#access_token=a&refresh_token=b&type=signup').requiresPassword,false);
+});
