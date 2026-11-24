@@ -8,7 +8,9 @@ const refused={not_started:'o horário ainda não começou',note_required:'escre
  not_decidable:'a taxa mudou de situação; atualize a página',not_open:'a taxa não está em aberto',already_started:'o horário já começou',not_cancellable:'esse agendamento não pode ser cancelado',not_found:'registro não encontrado'};
 const whatsapp=phone=>phone?`https://wa.me/${phone.replace(/\D/g,'')}`:null;
 
-export default function AdminBookings(){
+// view: 'settings' (liga/desliga e limites), 'fees' (taxas e presença/falta), 'upcoming' (próximos e histórico).
+const titles={settings:'Agendamento online',fees:'Taxas e presença',upcoming:'Próximos agendamentos'};
+export default function AdminBookings({view='upcoming'}){
  const [data,setData]=useState(null),[failed,setFailed]=useState(false),[reload,setReload]=useState(0),[busy,setBusy]=useState(false),[message,setMessage]=useState('');
  const [pending,setPending]=useState(null),[note,setNote]=useState(''),[limits,setLimits]=useState(null);
  useEffect(()=>{let alive=true;const today=todayInClinic();
@@ -32,15 +34,15 @@ export default function AdminBookings(){
   <div className="actions"><button className="primary" disabled={busy}>{busy?'Aguarde…':pending.label}</button><button type="button" disabled={busy} onClick={()=>setPending(null)}>Voltar</button></div>
  </form>;
  const customer=c=><>{c.name||'Nome não informado'}{c.phone&&<> · <a href={whatsapp(c.phone)} target="_blank" rel="noopener noreferrer">{c.phone}</a></>}</>;
- if(failed)return <section className="admin-bookings"><p className="eyebrow">AGENDAMENTOS</p><h2>Reservas e taxas</h2><p role="status">Não foi possível carregar os agendamentos. Atualize a página.</p></section>;
+ if(failed)return <section className="admin-bookings"><h2>{titles[view]}</h2><p role="status">Não foi possível carregar os agendamentos. Atualize a página.</p></section>;
  if(!data)return <section className="admin-bookings"><p role="status">Consultando agendamentos…</p></section>;
  const now=Date.now();
  const toMark=data.items.filter(i=>i.status==='confirmed'&&Date.parse(i.starts_at)<=now);
  const upcoming=data.items.filter(i=>i.status==='confirmed'&&Date.parse(i.starts_at)>now);
  const history=data.items.filter(i=>i.status!=='confirmed').slice(-20).reverse();
  const mark=(i,outcome,label,done,needsNote=false)=>ask({key:`${i.id}:${outcome}`,fn:'admin_mark_attendance',args:n=>({p_id:i.id,p_outcome:outcome,p_note:n}),label,done,needsNote});
- return <section className="admin-bookings" aria-labelledby="admin-bookings-title"><p className="eyebrow">AGENDAMENTOS</p><h2 id="admin-bookings-title">Reservas e taxas</h2>
- <div className="booking-switch"><p>Agendamento online: <strong>{data.enabled?'ligado':'desligado'}</strong>. Regra em vigor: {data.rule_version||'nenhuma'}.</p>
+ return <section className="admin-bookings" aria-labelledby="admin-bookings-title"><h2 id="admin-bookings-title">{titles[view]}</h2>
+ {view==='settings'&&<div className="booking-switch"><p>Agendamento online: <strong>{data.enabled?'ligado':'desligado'}</strong>. Regra em vigor: {data.rule_version||'nenhuma'}.</p>
   <button disabled={busy} onClick={()=>ask({key:'switch',fn:'admin_set_booking_enabled',args:()=>({p_enabled:!data.enabled}),note:false,
    label:data.enabled?'Desligar agendamento online':'Ligar agendamento online',
    warning:data.enabled?'Novos agendamentos param na hora. Os já marcados continuam valendo.':'As clientes passam a poder agendar pelo site, seguindo a regra de faltas em vigor.',
@@ -49,9 +51,9 @@ export default function AdminBookings(){
   {!limits?<button disabled={busy} onClick={()=>{setLimits({notice:data.min_notice_minutes,max:data.max_future_bookings});setMessage('');}}>Alterar limites</button>
   :<form className="confirm-box" onSubmit={saveLimits}><div className="form-grid"><label>Antecedência mínima<select value={limits.notice} onChange={e=>setLimits({...limits,notice:Number(e.target.value)})}>{noticeOptions.map(m=><option key={m} value={m}>{duration(m)}</option>)}</select></label>
    <label>Agendamentos futuros por cliente<select value={limits.max} onChange={e=>setLimits({...limits,max:Number(e.target.value)})}>{[1,2,3,4,5].map(n=><option key={n} value={n}>{n}</option>)}</select></label></div>
-   <div className="actions"><button className="primary" disabled={busy}>{busy?'Aguarde…':'Salvar limites'}</button><button type="button" disabled={busy} onClick={()=>setLimits(null)}>Voltar</button></div></form>}</div>
+   <div className="actions"><button className="primary" disabled={busy}>{busy?'Aguarde…':'Salvar limites'}</button><button type="button" disabled={busy} onClick={()=>setLimits(null)}>Voltar</button></div></form>}</div>}
  {message&&<p className="message" role="status">{message}</p>}
- <h3>Taxas em aberto</h3>
+ {view==='fees'&&<><p className="account-details-hint">Taxa nasce como proposta e só vira cobrança depois da sua decisão. Para cobrar a falta de uma cliente, marque "Faltou: cobrar taxa" no atendimento dela.</p><h3>Taxas em aberto</h3>
  {data.open_fees.length?data.open_fees.map(f=><article className="availability-change" key={f.id}>
   <strong>{money(f.amount_cents)} · {f.reason==='no_show'?'Falta':'Cancelou com menos de 24 h'} · {f.status==='proposed'?'aguardando sua decisão':'cobrança confirmada'}</strong>
   <p>{customer(f.customer)} · {f.appointment.service.name} · {f.appointment.service.variant} · {when(f.appointment.starts_at)}</p>
@@ -68,14 +70,14 @@ export default function AdminBookings(){
    <button disabled={busy} onClick={()=>mark(i,'no_show_fee','Registrar falta e cobrar','Falta registrada e taxa confirmada.')}>Faltou: cobrar taxa</button>
    <button disabled={busy} onClick={()=>mark(i,'no_show_waived','Registrar falta sem taxa','Falta registrada sem taxa.',true)}>Faltou: dispensar taxa</button></div>
   {['completed','no_show_fee','no_show_waived'].map(o=><React.Fragment key={o}>{box(`${i.id}:${o}`)}</React.Fragment>)}
- </article>):<p>Nenhum atendimento passado esperando marcação.</p>}
- <h3>Próximos agendamentos</h3>
+ </article>):<p>Nenhum atendimento passado esperando marcação.</p>}</>}
+ {view==='upcoming'&&<>
  {upcoming.length?upcoming.map(i=><article className="availability-change" key={i.id}>
   <strong>{when(i.starts_at)}–{clock(i.ends_at)} · {i.service.name} · {i.service.variant}</strong>
   <p>{customer(i.customer)}{i.reschedule_count>0?` · remarcado ${i.reschedule_count}×`:''}</p>
   <button disabled={busy} onClick={()=>ask({key:`${i.id}:cancel`,fn:'admin_cancel_appointment',args:n=>({p_id:i.id,p_note:n}),label:'Cancelar pela clínica',needsNote:true,
    warning:'Cancelamento pela clínica não gera taxa. A cliente recebe um e-mail automático; se quiser, avise também pelo WhatsApp.',done:'Agendamento cancelado pela clínica. A cliente vai receber um e-mail.'})}>Cancelar pela clínica</button>{box(`${i.id}:cancel`)}
  </article>):<p>Nenhum agendamento futuro nos próximos 45 dias.</p>}
- {history.length>0&&<><h3>Histórico recente</h3>{history.map(i=><p key={i.id}>{when(i.starts_at)} · {i.service.name} · {i.customer.name||'Cliente'} · {statusLabel(i)}{i.fee?` · ${feeLabel(i.fee)}`:''}</p>)}</>}
+ {history.length>0&&<><h3>Histórico recente</h3>{history.map(i=><p key={i.id}>{when(i.starts_at)} · {i.service.name} · {i.customer.name||'Cliente'} · {statusLabel(i)}{i.fee?` · ${feeLabel(i.fee)}`:''}</p>)}</>}</>}
  </section>;
 }

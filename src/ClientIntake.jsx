@@ -32,7 +32,7 @@ function formFrom(row){
  return {birth_date:row?.birth_date||'',sex:row?.sex||'',address:row?.address||'',answers,signed_name:'',privacy_accepted:false,declaration_accepted:false,procedure_authorized:false,photo_record_authorized:false};
 }
 
-export default function ClientIntake({userId,profile,email}){
+export default function ClientIntake({userId,profile,email,onSaved}){
  const prefix=useId(),activeUser=useRef(userId);activeUser.current=userId;
  const [form,setForm]=useState(()=>formFrom(null)),[record,setRecord]=useState(null),[loadedUser,setLoadedUser]=useState(null),[loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[loadError,setLoadError]=useState(false),[message,setMessage]=useState(''),[conflict,setConflict]=useState(false),[reload,setReload]=useState(0);
  useEffect(()=>{
@@ -62,7 +62,7 @@ export default function ClientIntake({userId,profile,email}){
    if(error)throw error;if(activeUser.current!==savingUser)return;
    const saved=Array.isArray(data)?data[0]:data;
    if(!saved||!Number.isInteger(saved.revision))throw new Error('Unconfirmed save');
-   setRecord(saved);setForm(formFrom(saved));setMessage('Ficha salva. Para um novo envio, revise as respostas e refaça a confirmação sobre rímel, as declarações e o nome de confirmação.');
+   setRecord(saved);onSaved?.(saved);setForm(formFrom(saved));setMessage('Ficha salva. Para um novo envio, revise as respostas e refaça a confirmação sobre rímel, as declarações e o nome de confirmação.');
   }catch(error){
    if(activeUser.current!==savingUser)return;
    const changed=['40001','PT409'].includes(error?.code);setConflict(changed);

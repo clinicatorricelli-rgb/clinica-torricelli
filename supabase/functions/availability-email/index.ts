@@ -50,6 +50,16 @@ const db = {
     if (!sql) throw new Error('database_not_configured');
     await sql`select private.finish_booking_email(${id}::uuid,${outcome}::text,${providerId}::text,${code}::text)`;
   },
+  // Agenda do dia para a clínica (6h30, segunda a sábado).
+  async prepareDailyAgenda() {
+    if (!sql) throw new Error('database_not_configured');
+    const [row] = await sql`select private.prepare_daily_agenda() as job`;
+    return row.job;
+  },
+  async finishDailyAgenda(day: string, outcome: string, providerId: string | null, code: string | null) {
+    if (!sql) throw new Error('database_not_configured');
+    await sql`select private.finish_daily_agenda(${day}::date,${outcome}::text,${providerId}::text,${code}::text)`;
+  },
   async unsubscribe(token: string) {
     if (!sql) throw new Error('database_not_configured');
     const [row] = await sql`select private.unsubscribe_availability_email(${token}::text) as revoked`;
