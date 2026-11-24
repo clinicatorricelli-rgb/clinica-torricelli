@@ -150,3 +150,55 @@ footer p{margin-inline:auto}main a:not(.brand){color:var(--gold-text)}main a:not
 .account-row>div{display:grid;gap:2px;min-width:0}.account-row span{font-size:14px;overflow-wrap:anywhere}.account-row small{font-size:12px;opacity:.85}
 .account-row .confirm-box{flex-basis:100%;margin:6px 0 0}
 .primary.danger{background:#8f2d22;border-color:#8f2d22}.primary.danger:hover:not(:disabled){background:#6f2018}
+/* Celular: campos com 16 px para o iPhone não dar zoom sozinho ao tocar num campo */
+input,select,textarea{font-size:16px}
+@media(max-width:700px){h1,.hero h1{font-size:38px}h2{font-size:30px}h3{font-size:23px}section{padding:32px 5%}}
+/* Menu lateral (Minha conta e painel da Eduarda) */
+.account:has(.side-layout){max-width:1240px}
+.side-layout{display:grid;grid-template-columns:240px minmax(0,1fr);gap:36px;align-items:start;margin-top:8px}
+.side-toggle{display:none}
+.side-nav{position:sticky;top:16px;background:#fffaf3;border:1px solid var(--champagne);border-radius:18px;padding:16px 10px}
+.side-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:22px;font-weight:600;color:var(--ink);margin:2px 12px 10px}
+.side-nav ul{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.side-nav li button{width:100%;display:flex;align-items:center;gap:12px;border:0;border-radius:12px;padding:11px 12px;text-align:left;font-size:15px;font-weight:600;color:var(--text)}
+.side-nav li button:hover:not(:disabled){background:var(--cream-deep)}
+.side-nav li button.is-active{background:var(--champagne);color:var(--ink)}
+.side-nav .icon{flex:0 0 auto;color:var(--gold-text)}
+.side-badge{margin-left:auto;font-style:normal;font-size:12px;font-weight:700;background:var(--brown);color:#fff;border-radius:999px;padding:1px 8px}
+.side-content{min-width:0}.side-content>section{padding:0 0 30px;margin:0;border:0}
+.side-content h2{margin-top:0}
+@media(max-width:860px){
+ .side-layout{display:block}
+ .side-toggle{display:flex;align-items:center;gap:10px;width:100%;margin:0 0 18px;padding:12px 14px;border-radius:14px;background:#fffaf3;border:1px solid var(--champagne);font-size:15px}
+ .side-toggle b{font-weight:600;color:var(--gold-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .side-nav{position:fixed;inset:0 auto 0 0;width:min(300px,84vw);z-index:50;border-radius:0 18px 18px 0;transform:translateX(-105%);transition:transform .25s ease;overflow:auto;padding-top:24px}
+ .side-nav.is-open{transform:none;box-shadow:20px 0 60px -30px rgba(47,22,6,.6)}
+ .side-backdrop{position:fixed;inset:0;background:rgba(47,22,6,.35);z-index:40}
+}
+@media(prefers-reduced-motion:reduce){.side-nav{transition:none}}
+/* Primeiros passos */
+.checklist-progress{height:8px;border-radius:999px;background:var(--cream-deep);overflow:hidden;margin:14px 0 18px;max-width:520px}
+.checklist-progress span{display:block;height:100%;background:var(--gold);border-radius:999px;transition:width .4s ease}
+.checklist-steps{list-style:none;padding:0;margin:0 0 18px;display:grid;gap:10px}
+.checklist-steps li{display:flex;align-items:center;gap:12px;font-weight:600;color:var(--text);opacity:.7}
+.checklist-steps li.is-current{opacity:1;color:var(--ink)}.checklist-steps li.is-done{opacity:1}
+.checklist-mark{flex:0 0 28px;height:28px;border-radius:999px;display:grid;place-items:center;border:2px solid var(--champagne);font-size:13px;font-weight:700}
+.is-current .checklist-mark{border-color:var(--gold);color:var(--gold-text)}
+.is-done .checklist-mark{background:var(--gold);border-color:var(--gold);color:#fff}
+.checklist-panel{border:1px solid var(--gold);border-radius:16px;padding:18px;background:#fffaf3}
+.fee-ok{font-weight:600;color:#3d6b3a}
+/* Calendário da agenda */
+.agenda-next{margin-bottom:22px}
+.cal-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 10px}.cal-head h3{margin:0;min-width:190px;text-align:center}
+.cal-head>button:not(.inline-link){width:40px;height:40px;padding:0;border-radius:999px;font-size:20px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;max-width:720px}
+.cal-weekday{font-size:12px;font-weight:700;text-align:center;color:var(--gold-text);letter-spacing:1px}
+.cal-day{position:relative;aspect-ratio:1/1;min-height:44px;padding:6px;border-radius:12px;border:1px solid var(--champagne);background:#fffdfa;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;font-weight:600}
+.cal-day.is-out{opacity:.45}
+.cal-day.has-items{background:var(--cream-deep)}
+.cal-day em{font-style:normal;align-self:flex-end;font-size:12px;background:var(--brown);color:#fff;border-radius:999px;min-width:20px;padding:0 6px;text-align:center}
+.cal-day.is-today{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
+.cal-day.is-selected{background:var(--brown);color:#fff;border-color:var(--brown)}.cal-day.is-selected em{background:#fff;color:var(--brown)}
+.cal-dayview{margin-top:18px}.cal-dayview h3{text-transform:capitalize}
+@media(max-width:600px){.cal-grid{gap:4px}.cal-day{padding:4px;border-radius:9px;font-size:13px}.cal-day em{font-size:11px;min-width:16px;padding:0 4px}}
+.side-nav ul{align-content:start}.side-nav{display:block}

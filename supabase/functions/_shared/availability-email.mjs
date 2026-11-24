@@ -1,5 +1,6 @@
 import { timingSafeEqual } from 'node:crypto';
 import { processBookingEmails } from './booking-email.mjs';
+import { processDailyAgenda } from './daily-agenda.mjs';
 
 // Links in e-mails point to the clinic's own domain. The previous Pages address
 // keeps working, so its pages may still call the unsubscribe endpoint.
@@ -150,7 +151,11 @@ export function createAvailabilityEmailHandler({db, fetchImpl = fetch, cronSecre
       if (typeof db.prepareBookingEmail === 'function') {
         try { booking = await processBookingEmails({db, resendKey, fetchImpl}); } catch { booking = 'temporarily_unavailable'; }
       }
-      const withBooking = status => json(booking === undefined ? {status} : {status, booking});
+      let daily;
+      if (typeof db.prepareDailyAgenda === 'function') {
+        try { daily = await processDailyAgenda({db, resendKey, fetchImpl}); } catch { daily = 'temporarily_unavailable'; }
+      }
+      const withBooking = status => json({status, ...(booking === undefined ? {} : {booking}), ...(daily === undefined ? {} : {daily})});
       // Enqueue commits before preparation: publication materialization can
       // lock delivery rows, while dispatch/revocation lock preferences first.
       await db.enqueue();

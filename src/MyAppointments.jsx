@@ -3,7 +3,8 @@ import {when,clock,todayInClinic,reasonMessage,statusLabel,feeLabel,cancelNotice
 
 // Customer's own appointments. Every rule (24 h, grace, fee) is decided by the database;
 // this screen only explains the consequence before the customer confirms.
-export default function MyAppointments({userId,version=0,onChanged=()=>{},onBook=()=>{}}){
+export default function MyAppointments({userId,version=0,onChanged=()=>{},onBook=()=>{},view='appointments'}){
+ const fees=view==='fees';
  const [data,setData]=useState(null),[legacy,setLegacy]=useState(null),[failed,setFailed]=useState(false),[reload,setReload]=useState(0);
  const [action,setAction]=useState(null),[day,setDay]=useState(todayInClinic),[options,setOptions]=useState([]),[pick,setPick]=useState(null),[busy,setBusy]=useState(false),[message,setMessage]=useState('');
  useEffect(()=>{let alive=true;setFailed(false);
@@ -26,12 +27,13 @@ export default function MyAppointments({userId,version=0,onChanged=()=>{},onBook
  const move=(item,slot)=>run(async()=>{const {data,error}=await supabase.rpc('reschedule_appointment',{p_id:item.id,p_start:slot.starts_at});if(error)throw error;
   setMessage(data.ok?`Agendamento remarcado para ${when(data.appointment.starts_at)}.`:reasonMessage(data));if(data.ok)done();else setReload(v=>v+1);});
  const open=(item,kind)=>{setAction({id:item.id,kind});setDay(todayInClinic());setMessage('');};
- return <section className="my-appointments" aria-labelledby="my-appointments-title"><h2 id="my-appointments-title">Meus agendamentos</h2>
+ return <section className="my-appointments" aria-labelledby="my-appointments-title"><h2 id="my-appointments-title">{fees?'Taxas':'Meus agendamentos'}</h2>
  {message&&<p className="message" role="status">{message}</p>}
  {failed?<p role="alert">Não foi possível carregar seus agendamentos. Atualize a página.</p>
  :legacy?(legacy.length?legacy.map(a=><p key={a.id}>{when(a.starts_at)} · {a.status}</p>):<p>Você ainda não tem agendamentos.</p>)
  :!data?<p role="status">Carregando seus agendamentos…</p>
  :<>
+  {fees&&data.open_fee_cents<=0&&<p className="fee-ok">Nenhuma taxa em aberto. Tudo certo!</p>}
   {data.open_fee_cents>0&&<div className="fee-alert" role="alert"><strong>Taxa em aberto: {money(data.open_fee_cents)}.</strong> Novos agendamentos pelo site ficam bloqueados até a clínica dar baixa. A clínica vai combinar o pagamento com você pelo WhatsApp ou e-mail.</div>}
   {(()=>{const now=Date.now(),upcoming=data.items.filter(i=>i.status==='confirmed'&&Date.parse(i.ends_at)>now).sort((a,b)=>a.starts_at.localeCompare(b.starts_at)),history=data.items.filter(i=>!upcoming.includes(i)).sort((a,b)=>b.starts_at.localeCompare(a.starts_at));
    const card=item=><article className="appointment-card" key={item.id}>
@@ -48,6 +50,7 @@ export default function MyAppointments({userId,version=0,onChanged=()=>{},onBook
     <div className="actions">{pick&&<button className="primary" disabled={busy} onClick={()=>move(item,pick)}>{busy?'Aguarde…':'Confirmar remarcação'}</button>}<button disabled={busy} onClick={()=>setAction(null)}>Voltar</button></div>
    </div>}
   </article>;
+   if(fees){const withFee=data.items.filter(i=>i.fee);return withFee.length?<><h3 className="appointments-group">Histórico de taxas</h3>{withFee.map(card)}<p className="account-details-hint">Pagamento combinado com a clínica pelo WhatsApp ou e-mail. A baixa é feita pela Eduarda depois de conferir.</p></>:<p className="account-details-hint">Taxas só existem quando o aviso de cancelamento vem com menos de 24 horas ou quando há falta sem justificativa.</p>;}
    return <><h3 className="appointments-group">Próximos</h3>{upcoming.length?upcoming.map(card):<p>Nenhum horário marcado.{data.booking_enabled&&<> <button className="inline-link" onClick={onBook}>Ver horários disponíveis</button></>}</p>}
     {history.length>0&&<details className="appointments-history"><summary>Histórico ({history.length})</summary>{history.map(card)}</details>}</>;})()}
  </>}
