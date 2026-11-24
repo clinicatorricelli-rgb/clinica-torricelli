@@ -6,6 +6,7 @@ import AdminIntake from './AdminIntake';
 import AdminBookings from './AdminBookings';
 import AdminCalendar from './AdminCalendar';
 import AdminAccounts from './AdminAccounts';
+import AdminWhatsApp from './AdminWhatsApp';
 import {todayInClinic} from './booking.mjs';
 
 // Painel da Eduarda com menu à esquerda: cada assunto numa tela própria.
@@ -23,7 +24,8 @@ export default function AdminDashboard({onSignOut}){
   {key:'horarios',label:'Horários de atendimento',icon:'settings'},
   {key:'clientes',label:'Clientes',icon:'users'},
   {key:'fichas',label:'Fichas',icon:'clipboard'},
-  {key:'config',label:'Agendamento e avisos',icon:'bell'},
+  {key:'whatsapp',label:'Alertas no WhatsApp',icon:'bell'},
+  {key:'config',label:'Agendamento e e-mails',icon:'settings'},
   ...(onSignOut?[{key:'sair',label:'Sair da conta',icon:'logout',onClick:onSignOut}]:[]),
  ];
  return <SideNav title="Painel da Eduarda" items={items} active={section} onSelect={setSection}>
@@ -33,6 +35,7 @@ export default function AdminDashboard({onSignOut}){
   {section==='horarios'&&<AvailabilityPanel/>}
   {section==='clientes'&&<AdminAccounts/>}
   {section==='fichas'&&<AdminIntake/>}
+  {section==='whatsapp'&&<AdminWhatsApp/>}
   {section==='config'&&<><AdminBookings view="settings"/><NotificationStatus/></>}
  </SideNav>;
 }

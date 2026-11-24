@@ -1,0 +1,28 @@
+[
+ {
+  "name": "clinica_agenda_do_dia",
+  "category": "UTILITY",
+  "language": "pt_BR",
+  "allow_category_change": true,
+  "components": [
+   {"type": "BODY",
+    "text": "Bom dia, Eduarda! Esta é a agenda de {{1}} no site da Clínica Torricelli: {{2}}. Para o dia seguinte: {{3}}. Os detalhes estão no seu painel.",
+    "example": {"body_text": [["quarta-feira, 25/11", "2 atendimentos: 09:00 Ana (Lash Lifting); 14:00 Bia (Design de Sobrancelha)", "1 atendimento marcado"]]}},
+   {"type": "FOOTER", "text": "Clínica Torricelli"},
+   {"type": "BUTTONS", "buttons": [{"type": "URL", "text": "Abrir meu painel", "url": "https://clinicatorricelli.com.br/?view=admin"}]}
+  ]
+ },
+ {
+  "name": "clinica_aviso_agenda",
+  "category": "UTILITY",
+  "language": "pt_BR",
+  "allow_category_change": true,
+  "components": [
+   {"type": "BODY",
+    "text": "Olá, Eduarda! Aviso da sua agenda no site da Clínica Torricelli: {{1}}. Cliente: {{2}}. Serviço: {{3}}. Horário: {{4}}. Os detalhes estão no seu painel.",
+    "example": {"body_text": [["novo agendamento", "Ana Souza", "Lash Lifting · Com tintura", "26/11 às 14:00"]]}},
+   {"type": "FOOTER", "text": "Clínica Torricelli"},
+   {"type": "BUTTONS", "buttons": [{"type": "URL", "text": "Abrir meu painel", "url": "https://clinicatorricelli.com.br/?view=admin"}]}
+  ]
+ }
+]

@@ -60,6 +60,24 @@ const db = {
     if (!sql) throw new Error('database_not_configured');
     await sql`select private.finish_daily_agenda(${day}::date,${outcome}::text,${providerId}::text,${code}::text)`;
   },
+  // Alertas da Eduarda no WhatsApp particular dela.
+  async markOwnerWhatsappProvider(ready: boolean) {
+    if (!sql) throw new Error('database_not_configured');
+    await sql`select private.mark_owner_whatsapp_provider(${ready})`;
+  },
+  async enqueueOwnerDailyWhatsapp() {
+    if (!sql) throw new Error('database_not_configured');
+    await sql`select private.enqueue_owner_daily_whatsapp()`;
+  },
+  async prepareOwnerWhatsapp() {
+    if (!sql) throw new Error('database_not_configured');
+    const [row] = await sql`select private.prepare_owner_whatsapp() as job`;
+    return row.job;
+  },
+  async finishOwnerWhatsapp(id: string, outcome: string, providerId: string | null, code: string | null) {
+    if (!sql) throw new Error('database_not_configured');
+    await sql`select private.finish_owner_whatsapp(${id}::uuid,${outcome}::text,${providerId}::text,${code}::text)`;
+  },
   async unsubscribe(token: string) {
     if (!sql) throw new Error('database_not_configured');
     const [row] = await sql`select private.unsubscribe_availability_email(${token}::text) as revoked`;
@@ -79,6 +97,7 @@ Deno.serve(createAvailabilityEmailHandler({
   db,
   cronSecret: Deno.env.get('AVAILABILITY_CRON_SECRET'),
   resendKey: Deno.env.get('RESEND_API_KEY'),
+  whatsappKey: Deno.env.get('WHATSAPP_360_API_KEY'),
   supabaseUrl: Deno.env.get('SUPABASE_URL'),
   webhookHandler,
 }));

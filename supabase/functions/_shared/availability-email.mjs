@@ -1,6 +1,7 @@
 import { timingSafeEqual } from 'node:crypto';
 import { processBookingEmails } from './booking-email.mjs';
 import { processDailyAgenda } from './daily-agenda.mjs';
+import { processOwnerWhatsapp } from './owner-whatsapp.mjs';
 
 // Links in e-mails point to the clinic's own domain. The previous Pages address
 // keeps working, so its pages may still call the unsubscribe endpoint.
@@ -98,7 +99,7 @@ async function sendEmail(job, payload, key, fetchImpl) {
   }
 }
 
-export function createAvailabilityEmailHandler({db, fetchImpl = fetch, cronSecret, resendKey, supabaseUrl, webhookHandler}) {
+export function createAvailabilityEmailHandler({db, fetchImpl = fetch, cronSecret, resendKey, supabaseUrl, webhookHandler, whatsappKey}) {
   return async function handle(request) {
     let corsHeaders = {};
     try {
@@ -155,7 +156,12 @@ export function createAvailabilityEmailHandler({db, fetchImpl = fetch, cronSecre
       if (typeof db.prepareDailyAgenda === 'function') {
         try { daily = await processDailyAgenda({db, resendKey, fetchImpl}); } catch { daily = 'temporarily_unavailable'; }
       }
-      const withBooking = status => json({status, ...(booking === undefined ? {} : {booking}), ...(daily === undefined ? {} : {daily})});
+      // Alertas da Eduarda no WhatsApp: isolados, como os e-mails acima.
+      let whatsapp;
+      if (typeof db.prepareOwnerWhatsapp === 'function') {
+        try { whatsapp = await processOwnerWhatsapp({db, whatsappKey, fetchImpl}); } catch { whatsapp = 'temporarily_unavailable'; }
+      }
+      const withBooking = status => json({status, ...(booking === undefined ? {} : {booking}), ...(daily === undefined ? {} : {daily}), ...(whatsapp === undefined ? {} : {whatsapp})});
       // Enqueue commits before preparation: publication materialization can
       // lock delivery rows, while dispatch/revocation lock preferences first.
       await db.enqueue();
