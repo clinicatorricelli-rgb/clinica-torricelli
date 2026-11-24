@@ -23,7 +23,7 @@ import './intake.css';
 
 // Aviso quando o link do e-mail não abre aqui (outro navegador, já usado ou vencido).
 const linkFailedDialog=code=>({title:code==='other_browser'?'Quase lá':'Este link não vale mais',text:code==='other_browser'
-  ?'Não deu para abrir este link aqui, mas se ele era de confirmação de cadastro, seu e-mail já está confirmado.\nEntre com seu e-mail e senha em Minha conta. Se você pediu uma nova senha, peça de novo e abra o link neste mesmo aparelho.'
+  ?'Não deu para abrir este link aqui, mas se ele era de confirmação de cadastro, seu e-mail já está confirmado.\nEntre com seu e-mail e senha em Minha conta. Se você pediu uma nova senha, peça de novo em Recuperar senha.'
   :'Ele já foi usado ou venceu. Se você já confirmou seu cadastro, é só entrar com seu e-mail e senha.\nSe precisar, peça um novo link em Minha conta.'});
 function App(){
  const [page,setPage]=useState(()=>{const view=new URLSearchParams(location.search).get('view');return ['services','account','unsubscribe','privacidade','termos'].includes(view)?view:'home';}),[session,setSession]=useState(null),[message,setMessage]=useState(''),[mode,setMode]=useState('login'),[busy,setBusy]=useState(false),[rows,setRows]=useState(catalog),[profile,setProfile]=useState(null),[booking,setBooking]=useState(null),[bookingsVersion,setBookingsVersion]=useState(0),[adminUserId,setAdminUserId]=useState(null),[detailsOpen,setDetailsOpen]=useState(false),[dialog,setDialog]=useState(null),[aal,setAal]=useState(false),[factor,setFactor]=useState(null),[qr,setQr]=useState(''),[query,setQuery]=useState(''),[ready,setReady]=useState(!supabase);
@@ -70,13 +70,13 @@ function App(){
   // Each Turnstile token is single-use: whatever happens, the next attempt gets a fresh one.
   const captchaToken=needsCaptcha?captcha:undefined;if(needsCaptcha){setCaptcha(null);setCaptchaRound(n=>n+1);}
   if(mode==='signup')result=await signupClient().auth.signUp({email:f.get('email'),password:f.get('password'),options:{emailRedirectTo:redirectUrl(),captchaToken,data:{legal_version:LEGAL_VERSION}}});
-  else if(mode==='recovery')result=await supabase.auth.resetPasswordForEmail(f.get('email'),{redirectTo:redirectUrl(),captchaToken});
+  else if(mode==='recovery')result=await signupClient().auth.resetPasswordForEmail(f.get('email'),{redirectTo:redirectUrl(),captchaToken});
   else if(mode==='password'){result=await supabase.auth.updateUser({password:f.get('password')});if(!result.error){sessionStorage.removeItem('torriceli-password-setup');await supabase.auth.signOut();setMode('login');setPasswordLength(0);}}
   else result=await supabase.auth.signInWithPassword({email:f.get('email'),password:f.get('password'),options:{captchaToken}});
   if(result.error)throw result.error;
   const email=String(f.get('email')||'').trim();
   if(mode==='signup'){setDialog({title:'Confira seu e-mail',text:`Enviamos um link de confirmação para ${email}.\nAbra seu e-mail (veja também as pastas Spam e Promoções) e toque no link para ativar sua conta. Pode abrir no celular ou no computador.`});form.reset();setPasswordLength(0);}
-  else if(mode==='recovery')setDialog({title:'Confira seu e-mail',text:`Se ${email} estiver cadastrado, enviamos um link para criar uma nova senha.\nAbra o link neste mesmo aparelho e navegador.`});
+  else if(mode==='recovery')setDialog({title:'Confira seu e-mail',text:`Se ${email} estiver cadastrado, enviamos um link para criar uma nova senha.\nAbra seu e-mail (veja também Spam e Promoções) e toque no link. Pode abrir no celular ou no computador.`});
   else setMessage(mode==='password'?'Senha atualizada. Entre novamente.':'Acesso realizado.');
  });}
  async function prepareMfa(){await action(async()=>{
