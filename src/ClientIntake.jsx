@@ -1,6 +1,7 @@
 import React,{useEffect,useId,useRef,useState} from 'react';
 import {supabase} from './supabase';
 import './intake.css';
+import {formatPhone} from './phone.mjs';
 
 export const intakeQuestions=[
  {key:'pregnant_or_breastfeeding',label:'Está grávida ou amamentando?',detailsLabel:'Se sim, há quanto tempo?'},
@@ -76,7 +77,7 @@ export default function ClientIntake({userId,profile,email,onSaved}){
    {record&&<p className="intake-saved">Último envio: {formatIntakeTimestamp(record.submitted_at)} · revisão {record.revision}. Confira se as respostas continuam atuais. A resposta sobre rímel e as confirmações abaixo precisam ser refeitas.</p>}
    <form onSubmit={save} aria-describedby={`${prefix}-notice`}>
     <fieldset disabled={saving} className="intake-fieldset"><legend>1. Dados pessoais</legend><p className="intake-help">Nome, telefone e e-mail vêm do seu cadastro. Para alterá-los, use os campos do cadastro acima ou as opções da sua conta.</p>
-     <div className="intake-grid"><label>Nome cadastrado<input readOnly value={profile?.display_name||''} placeholder="Ainda não informado"/></label><label>Telefone cadastrado<input readOnly value={profile?.phone_e164||''} placeholder="Ainda não informado"/></label><label className="intake-wide">E-mail da conta<input readOnly value={email||''} placeholder="Ainda não informado"/></label>
+     <div className="intake-grid"><label>Nome cadastrado<input readOnly value={profile?.display_name||''} placeholder="Ainda não informado"/></label><label>Telefone cadastrado<input readOnly value={formatPhone(profile?.phone_e164)} placeholder="Ainda não informado"/></label><label className="intake-wide">E-mail da conta<input readOnly value={email||''} placeholder="Ainda não informado"/></label>
       <label>Data de nascimento (opcional)<input type="date" min="1900-01-01" max={today()} autoComplete="off" value={form.birth_date} onChange={event=>change('birth_date',event.target.value)}/><small aria-live="polite">{age!==null?`Idade calculada: ${age} ${age===1?'ano':'anos'}.`:'A idade é calculada a partir da data informada.'}</small></label>
       <label>Sexo (opcional)<select value={form.sex} onChange={event=>change('sex',event.target.value)}><option value="">Não informado</option>{Object.entries(intakeSexLabels).map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></label>
       <label className="intake-wide">Endereço (opcional)<textarea rows={2} maxLength={500} autoComplete="off" value={form.address} onChange={event=>change('address',event.target.value)}/></label>
