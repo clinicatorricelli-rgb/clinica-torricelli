@@ -1,0 +1,425 @@
+[
+ {
+  "name": "clinica_agenda_dia_0",
+  "category": "UTILITY",
+  "language": "pt_BR",
+  "allow_category_change": true,
+  "components": [
+   {
+    "type": "BODY",
+    "text": "🩷Bom dia, Eduarda! 🩵\n\n🚨Agenda de hoje: {{1}}🚨\n\nNenhum atendimento marcado para hoje.\n\nPara amanhã: {{2}}.\nOs detalhes estão no seu painel. Confira os horários e, se precisar, fale com as clientes pelo WhatsApp.",
+    "example": {
+     "body_text": [
+      [
+       "quarta-feira, 26/11",
+       "2 atendimentos marcados"
+      ]
+     ]
+    }
+   },
+   {
+    "type": "FOOTER",
+    "text": "Clínica Torricelli"
+   },
+   {
+    "type": "BUTTONS",
+    "buttons": [
+     {
+      "type": "URL",
+      "text": "Abrir meu painel",
+      "url": "https://clinicatorricelli.com.br/?view=admin"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "clinica_agenda_dia_1",
+  "category": "UTILITY",
+  "language": "pt_BR",
+  "allow_category_change": true,
+  "components": [
+   {
+    "type": "BODY",
+    "text": "🩷Bom dia, Eduarda! 🩵\n\n🚨Agenda de hoje: {{1}}🚨\n\n*{{2}}*\n- {{3}}\n\nPara amanhã: {{4}}.\nOs detalhes estão no seu painel. Confira os horários e, se precisar, fale com as clientes pelo WhatsApp.",
+    "example": {
+     "body_text": [
+      [
+       "quarta-feira, 26/11",
+       "1 atendimento",
+       "09:00 Ana (Lash Lifting)",
+       "2 atendimentos marcados"
+      ]
+     ]
+    }
+   },
+   {
+    "type": "FOOTER",
+    "text": "Clínica Torricelli"
+   },
+   {
+    "type": "BUTTONS",
+    "buttons": [
+     {
+      "type": "URL",
+      "text": "Abrir meu painel",
+      "url": "https://clinicatorricelli.com.br/?view=admin"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "clinica_agenda_dia_2",
+  "category": "UTILITY",
+  "language": "pt_BR",
+  "allow_category_change": true,
+  "components": [
+   {
+    "type": "BODY",
+    "text": "🩷Bom dia, Eduarda! 🩵\n\n🚨Agenda de hoje: {{1}}🚨\n\n*{{2}}*\n- {{3}}\n- {{4}}\n\nPara amanhã: {{5}}.\nOs detalhes estão no seu painel. Confira os horários e, se precisar, fale com as clientes pelo WhatsApp.",
+    "example": {
+     "body_text": [
+      [
+       "quarta-feira, 26/11",
+       "2 atendimentos",
+       "09:00 Ana (Lash Lifting)",
+       "11:00 Bia (Design de Sobrancelha)",
+       "2 atendimentos marcados"
+      ]
+     ]
+    }
+   },
+   {
+    "type": "FOOTER",
+    "text": "Clínica Torricelli"
+   },
+   {
+    "type": "BUTTONS",
+    "buttons": [
+     {
+      "type": "URL",
+      "text": "Abrir meu painel",
+      "url": "https://clinicatorricelli.com.br/?view=admin"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "clinica_agenda_dia_3",
+  "category": "UTILITY",
+  "language": "pt_BR",
+  "allow_category_change": true,
+  "components": [
+   {
+    "type": "BODY",
+    "text": "🩷Bom dia, Eduarda! 🩵\n\n🚨Agenda de hoje: {{1}}🚨\n\n*{{2}}*\n- {{3}}\n- {{4}}\n- {{5}}\n\nPara amanhã: {{6}}.\nOs detalhes estão no seu painel. Confira os horários e, se precisar, fale com as clientes pelo WhatsApp.",
+    "example": {
+     "body_text": [
+      [
+       "quarta-feira, 26/11",
+       "3 atendimentos",
+       "09:00 Ana (Lash Lifting)",
+       "11:00 Bia (Design de Sobrancelha)",
+       "14:00 Carla (Brow Lamination)",
+       "2 atendimentos marcados"
+      ]
+     ]
+    }
+   },
+   {
+    "type": "FOOTER",
+    "text": "Clínica Torricelli"
+   },
+   {
+    "type": "BUTTONS",
+    "buttons": [
+     {
+      "type": "URL",
+      "text": "Abrir meu painel",
+      "url": "https://clinicatorricelli.com.br/?view=admin"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "clinica_agenda_dia_4",
+  "category": "UTILITY",
+  "language": "pt_BR",
+  "allow_category_change": true,
+  "components": [
+   {
+    "type": "BODY",
+    "text": "🩷Bom dia, Eduarda! 🩵\n\n🚨Agenda de hoje: {{1}}🚨\n\n*{{2}}*\n- {{3}}\n- {{4}}\n- {{5}}\n- {{6}}\n\nPara amanhã: {{7}}.\nOs detalhes estão no seu painel. Confira os horários e, se precisar, fale com as clientes pelo WhatsApp.",
+    "example": {
+     "body_text": [
+      [
+       "quarta-feira, 26/11",
+       "4 atendimentos",
+       "09:00 Ana (Lash Lifting)",
+       "11:00 Bia (Design de Sobrancelha)",
+       "14:00 Carla (Brow Lamination)",
+       "15:30 Duda (Efeito Rímel)",
+       "2 atendimentos marcados"
+      ]
+     ]
+    }
+   },
+   {
+    "type": "FOOTER",
+    "text": "Clínica Torricelli"
+   },
+   {
+    "type": "BUTTONS",
+    "buttons": [
+     {
+      "type": "URL",
+      "text": "Abrir meu painel",
+      "url": "https://clinicatorricelli.com.br/?view=admin"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "clinica_agenda_dia_5",
+  "category": "UTILITY",
+  "language": "pt_BR",
+  "allow_category_change": true,
+  "components": [
+   {
+    "type": "BODY",
+    "text": "🩷Bom dia, Eduarda! 🩵\n\n🚨Agenda de hoje: {{1}}🚨\n\n*{{2}}*\n- {{3}}\n- {{4}}\n- {{5}}\n- {{6}}\n- {{7}}\n\nPara amanhã: {{8}}.\nOs detalhes estão no seu painel. Confira os horários e, se precisar, fale com as clientes pelo WhatsApp.",
+    "example": {
+     "body_text": [
+      [
+       "quarta-feira, 26/11",
+       "5 atendimentos",
+       "09:00 Ana (Lash Lifting)",
+       "11:00 Bia (Design de Sobrancelha)",
+       "14:00 Carla (Brow Lamination)",
+       "15:30 Duda (Efeito Rímel)",
+       "17:00 Elis (Volume Brasileiro)",
+       "2 atendimentos marcados"
+      ]
+     ]
+    }
+   },
+   {
+    "type": "FOOTER",
+    "text": "Clínica Torricelli"
+   },
+   {
+    "type": "BUTTONS",
+    "buttons": [
+     {
+      "type": "URL",
+      "text": "Abrir meu painel",
+      "url": "https://clinicatorricelli.com.br/?view=admin"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "clinica_agenda_dia_6",
+  "category": "UTILITY",
+  "language": "pt_BR",
+  "allow_category_change": true,
+  "components": [
+   {
+    "type": "BODY",
+    "text": "🩷Bom dia, Eduarda! 🩵\n\n🚨Agenda de hoje: {{1}}🚨\n\n*{{2}}*\n- {{3}}\n- {{4}}\n- {{5}}\n- {{6}}\n- {{7}}\n- {{8}}\n\nPara amanhã: {{9}}.\nOs detalhes estão no seu painel. Confira os horários e, se precisar, fale com as clientes pelo WhatsApp.",
+    "example": {
+     "body_text": [
+      [
+       "quarta-feira, 26/11",
+       "6 atendimentos",
+       "09:00 Ana (Lash Lifting)",
+       "11:00 Bia (Design de Sobrancelha)",
+       "14:00 Carla (Brow Lamination)",
+       "15:30 Duda (Efeito Rímel)",
+       "17:00 Elis (Volume Brasileiro)",
+       "19:00 Fabi (Hydra Gloss)",
+       "2 atendimentos marcados"
+      ]
+     ]
+    }
+   },
+   {
+    "type": "FOOTER",
+    "text": "Clínica Torricelli"
+   },
+   {
+    "type": "BUTTONS",
+    "buttons": [
+     {
+      "type": "URL",
+      "text": "Abrir meu painel",
+      "url": "https://clinicatorricelli.com.br/?view=admin"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "clinica_aviso_agenda_v2",
+  "category": "UTILITY",
+  "language": "pt_BR",
+  "allow_category_change": true,
+  "components": [
+   {
+    "type": "BODY",
+    "text": "🩷Olá, Eduarda! {{1}} 🩵\n\n🚨Agenda da Clínica Torricelli🚨\n\n*{{2}}*\n- Cliente: {{3}}\n- Serviço: {{4}}\n- Horário: {{5}}\n\nOs detalhes estão no seu painel.",
+    "example": {
+     "body_text": [
+      [
+       "Boa tarde",
+       "Novo agendamento",
+       "Ana Souza",
+       "Lash Lifting · Com tintura",
+       "26/11 às 11:00"
+      ]
+     ]
+    }
+   },
+   {
+    "type": "FOOTER",
+    "text": "Clínica Torricelli"
+   },
+   {
+    "type": "BUTTONS",
+    "buttons": [
+     {
+      "type": "URL",
+      "text": "Abrir meu painel",
+      "url": "https://clinicatorricelli.com.br/?view=admin"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "clinica_confirmacao_cliente",
+  "category": "UTILITY",
+  "language": "pt_BR",
+  "allow_category_change": true,
+  "components": [
+   {
+    "type": "BODY",
+    "text": "Oi, {{1}}! 🩷\nAqui é a Eduarda, da Clínica Torricelli.\nSeu horário de {{2}} está confirmado para {{3}}, às {{4}}.\nSe porventura precisar remarcar ou cancelar, faça pelo site com mais de 24 horas de antecedência, sem custo.\nQualquer dúvida, é só me chamar por aqui.\nTe espero!",
+    "example": {
+     "body_text": [
+      [
+       "Ana",
+       "Lash Lifting",
+       "sexta-feira, 04/12",
+       "14:30"
+      ]
+     ]
+    }
+   },
+   {
+    "type": "FOOTER",
+    "text": "Clínica Torricelli"
+   },
+   {
+    "type": "BUTTONS",
+    "buttons": [
+     {
+      "type": "URL",
+      "text": "Minha conta",
+      "url": "https://clinicatorricelli.com.br/?view=account"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "clinica_lembrete_27h",
+  "category": "UTILITY",
+  "language": "pt_BR",
+  "allow_category_change": true,
+  "components": [
+   {
+    "type": "BODY",
+    "text": "Oi, {{1}}! 🩷\nPassando para lembrar do seu horário de {{2}} em {{3}}, às {{4}}.\nSe porventura precisar remarcar, ainda dá tempo de fazer isso sem custo pelo site.\nTe espero!",
+    "example": {
+     "body_text": [
+      [
+       "Ana",
+       "Lash Lifting",
+       "sexta-feira, 04/12",
+       "14:30"
+      ]
+     ]
+    }
+   },
+   {
+    "type": "FOOTER",
+    "text": "Clínica Torricelli"
+   },
+   {
+    "type": "BUTTONS",
+    "buttons": [
+     {
+      "type": "URL",
+      "text": "Minha conta",
+      "url": "https://clinicatorricelli.com.br/?view=account"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "clinica_lembrete_2h",
+  "category": "UTILITY",
+  "language": "pt_BR",
+  "allow_category_change": true,
+  "components": [
+   {
+    "type": "BODY",
+    "text": "Oi, {{1}}! 🩷\nSeu horário de {{2}} é hoje, às {{3}}.\nJá estou preparando tudo para te receber.\nAté daqui a pouco! 🩵",
+    "example": {
+     "body_text": [
+      [
+       "Ana",
+       "Lash Lifting",
+       "14:30"
+      ]
+     ]
+    }
+   },
+   {
+    "type": "FOOTER",
+    "text": "Clínica Torricelli"
+   }
+  ]
+ },
+ {
+  "name": "clinica_lembrete_20min",
+  "category": "UTILITY",
+  "language": "pt_BR",
+  "allow_category_change": true,
+  "components": [
+   {
+    "type": "BODY",
+    "text": "Oi, {{1}}! 🩷\nFalta pouquinho para o seu horário das {{2}}, vai ser um prazer te atender.\nQualquer coisa, me chame por aqui.\nAté já! 🩵",
+    "example": {
+     "body_text": [
+      [
+       "Ana",
+       "14:30"
+      ]
+     ]
+    }
+   },
+   {
+    "type": "FOOTER",
+    "text": "Clínica Torricelli"
+   }
+  ]
+ }
+]
