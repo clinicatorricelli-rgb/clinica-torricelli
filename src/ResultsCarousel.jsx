@@ -15,7 +15,7 @@ export const slides=[
  {src:'/media/resultados/lash-lifting-01.webp',label:'Lash Lifting',pos:'50% 50%'},
  {src:'/media/resultados/cilios-14.webp',label:'Extensão de cílios',pos:'50% 50%'},
  {src:'/media/resultados/sobrancelha-01.webp',label:'Sobrancelhas',pos:'50% 50%'},
- {src:'/media/resultados/labios-08.webp',label:'Micropigmentação labial',pos:'50% 50%'},
+ {src:'/media/resultados/labios-09.webp',label:'Micropigmentação labial',pos:'50% 50%'},
  {src:'/media/resultados/cilios-15.webp',label:'Extensão de cílios',pos:'50% 50%'},
 ];
 // Cada foto fica 1,5 s (pedido do usuário em 21/11); com "reduzir movimento", 3 s.
