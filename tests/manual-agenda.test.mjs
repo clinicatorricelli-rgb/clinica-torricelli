@@ -90,3 +90,21 @@ test('agenda paralela: a Eduarda cadastra, o horário some do site e aparece no 
   assert.ok((await slots(f,1,day)).includes('17:00'));
  }finally{await f.pg.close();}
 });
+
+test('agenda paralela com término e descrição livres (combos da agenda antiga)',async()=>{
+ const f=await fixture();try{
+  const admin=(sql,p)=>f.as(f.admin,()=>f.rpc(sql,p),'aal2');
+  const day=f.at('09:00').slice(0,10);
+  const save=(start,end,text)=>admin('public.admin_save_manual_appointment_v2($1,$2,$3,$4,$5,$6,$7,$8)',[null,7,start,end,text,'Gabrieli',null,null]);
+  assert.deepEqual(await save(f.at('11:00'),f.at('10:00'),null),{ok:false,reason:'invalid_end'});
+  const r=await save(f.at('11:00'),f.at('12:50'),'Manutenção Volume Brasileiro, Design de sobrancelha com henna');assert.equal(r.ok,true);
+  const row=(await f.pg.query("select to_char(ends_at at time zone 'America/Sao_Paulo','HH24:MI') fim,busy_until=ends_at livre from public.appointments where id=$1",[r.id])).rows[0];
+  assert.deepEqual(row,{fim:'12:50',livre:true});
+  const free=(await f.pg.query('select starts_at from public.available_slots(7,$1)',[day])).rows.map(x=>new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',hour:'2-digit',minute:'2-digit'}).format(new Date(x.starts_at)));
+  assert.ok(!free.includes('12:30')&&free.includes('13:00'),'ocupa até 12:50; o próximo início livre é 13:00');
+  const ov=await admin('public.admin_booking_overview($1,$2)',[day,day]);
+  assert.deepEqual(ov.items.find(i=>i.id===r.id).service,{name:'Manutenção Volume Brasileiro, Design de sobrancelha com henna',variant:''});
+  const items=(await f.pg.query('select private.owner_day_items($1) as j',[day])).rows[0].j;
+  assert.equal(items.find(i=>i.customer_name==='Gabrieli').service_name,'Manutenção Volume Brasileiro, Design de sobrancelha com henna');
+ }finally{await f.pg.close();}
+});

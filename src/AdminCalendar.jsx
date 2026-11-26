@@ -6,18 +6,21 @@ import {catalog} from './catalog.mjs';
 import {maskPhone,toE164,formatPhone} from './phone.mjs';
 
 // Agenda paralela: horários que a Eduarda marca para clientes que não usam o site.
-const manualReasons={name_required:'Digite o nome da cliente.',invalid_phone:'Confira o WhatsApp: DDD + número.',slot_unavailable:'Já existe atendimento nesse horário. Escolha outro.',service_not_found:'Escolha o serviço.',invalid_time:'Confira a data e o horário.',not_found:'Esse agendamento não existe mais.',not_editable:'Esse agendamento não pode mais ser alterado.'};
+const manualReasons={invalid_end:'O término precisa ser depois do início.',service_text_too_long:'Descrição muito longa.',name_required:'Digite o nome da cliente.',invalid_phone:'Confira o WhatsApp: DDD + número.',slot_unavailable:'Já existe atendimento nesse horário. Escolha outro.',service_not_found:'Escolha o serviço.',invalid_time:'Confira a data e o horário.',not_found:'Esse agendamento não existe mais.',not_editable:'Esse agendamento não pode mais ser alterado.'};
 const localParts=iso=>{const d=new Date(iso);const f=o=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',...o}).format(d);return {day:f({year:'numeric',month:'2-digit',day:'2-digit'}),time:f({hour:'2-digit',minute:'2-digit',hourCycle:'h23'})};};
 
 function ManualForm({initial,day,onDone,onCancel}){
  const [busy,setBusy]=useState(false),[message,setMessage]=useState('');
  const start=initial?localParts(initial.starts_at):{day,time:'09:00'};
- const serviceId=initial?catalog.find(c=>c.name===initial.service.name&&c.variant===initial.service.variant)?.id:catalog[0].id;
+ const serviceId=initial?.service_id||catalog[0].id;
+ const end=initial?localParts(initial.ends_at).time:'';
+ const description=initial&&!initial.service.variant?initial.service.name:'';
  async function submit(e){e.preventDefault();if(busy)return;const f=new FormData(e.currentTarget);
   const raw=String(f.get('phone')||'').trim(),phone=raw?toE164(raw):null;
   if(raw&&!phone){setMessage(manualReasons.invalid_phone);return;}
   setBusy(true);setMessage('');
-  try{const {data,error}=await supabase.rpc('admin_save_manual_appointment',{p_id:initial?.id||null,p_service_id:Number(f.get('service')),p_start:`${f.get('day')}T${f.get('time')}:00-03:00`,p_name:f.get('name'),p_phone:phone,p_notes:f.get('notes')});
+  try{const endTime=String(f.get('end')||'');
+   const {data,error}=await supabase.rpc('admin_save_manual_appointment_v2',{p_id:initial?.id||null,p_service_id:Number(f.get('service')),p_start:`${f.get('day')}T${f.get('time')}:00-03:00`,p_end:endTime?`${f.get('day')}T${endTime}:00-03:00`:null,p_service_text:f.get('service_text'),p_name:f.get('name'),p_phone:phone,p_notes:f.get('notes')});
    if(error)throw error;if(data.ok)onDone(initial?'Agendamento atualizado.':'Horário reservado na agenda. Ele já não aparece mais para as clientes no site.');else setMessage(manualReasons[data.reason]||'Não foi possível salvar.');
   }catch{setMessage('Não foi possível salvar. Confira a sessão e o segundo fator.');}finally{setBusy(false);}
  }
@@ -27,7 +30,9 @@ function ManualForm({initial,day,onDone,onCancel}){
   <label>Nome da cliente<input name="name" required maxLength={100} defaultValue={initial?.customer.name||''}/></label>
   <label>WhatsApp (opcional)<input name="phone" type="tel" inputMode="tel" maxLength={16} placeholder="(19) 99999-9999" defaultValue={formatPhone(initial?.customer.phone)} onInput={e=>{e.currentTarget.value=maskPhone(e.currentTarget.value);}}/></label>
   <label>Serviço<select name="service" defaultValue={serviceId}>{catalog.map(c=><option key={c.id} value={c.id}>{c.name} · {c.variant} ({c.duration_minutes} min)</option>)}</select></label>
-  <div className="form-grid"><label>Data<input name="day" type="date" required defaultValue={start.day}/></label><label>Horário<input name="time" type="time" required step={300} defaultValue={start.time}/></label></div>
+  <label>Descrição (opcional; ex.: combos)<input name="service_text" maxLength={200} placeholder="Ex.: Manutenção Volume Brasileiro, Design com henna" defaultValue={description}/></label>
+  <div className="form-grid"><label>Data<input name="day" type="date" required defaultValue={start.day}/></label><label>Início<input name="time" type="time" required step={300} defaultValue={start.time}/></label></div>
+  <label>Término (opcional)<input name="end" type="time" step={300} defaultValue={end}/><small>Em branco, usa a duração do serviço escolhido.</small></label>
   <label>Observação (opcional; só você vê)<input name="notes" maxLength={500} defaultValue={initial?.manual_notes||''}/></label>
   {message&&<p className="fee-line" role="alert">{message}</p>}
   <div className="actions"><button className="primary" disabled={busy}>{busy?'Salvando…':initial?'Salvar alterações':'Reservar horário'}</button><button type="button" disabled={busy} onClick={onCancel}>Voltar</button></div>
@@ -43,7 +48,7 @@ function Item({a,onEdit,onCancel}){
  const manual=a.source==='manual',future=a.status==='confirmed'&&Date.parse(a.starts_at)>Date.now();
  return <li className={`agenda-item${a.status==='cancelled'?' is-cancelled':''}${manual?' is-manual':''}`}>
   <span className="agenda-time">{clock(a.starts_at)}–{clock(a.ends_at)}</span>
-  <span className="agenda-what"><strong>{a.service.name}</strong> · {a.service.variant}</span>
+  <span className="agenda-what"><strong>{a.service.name}</strong>{a.service.variant?` · ${a.service.variant}`:''}</span>
   <span className="agenda-who">{a.customer.name||'Cliente sem nome'}{a.customer.phone&&<> · <a href={whatsapp(a.customer.phone)} target="_blank" rel="noopener noreferrer">WhatsApp</a></>}</span>
   {a.status!=='confirmed'&&<span className="agenda-status">{statusLabel(a)}</span>}
   {manual&&<span className="agenda-tag">Agenda paralela{a.manual_notes?` · ${a.manual_notes}`:''}</span>}
@@ -74,7 +79,7 @@ export default function AdminCalendar(){
   {note&&<p className="message" role="status">{note}</p>}
   {form&&<ManualForm initial={form.id?form:null} day={selected<today?today:selected} onDone={done} onCancel={()=>setForm(null)}/>}
   <div className="agenda-next"><h3>Próximos atendimentos</h3>
-   {!next?<p role="status">Carregando…</p>:next.length?<ul className="agenda-list">{next.map(a=><li key={a.id} className="agenda-item"><span className="agenda-time">{when(a.starts_at)}</span><span className="agenda-what"><strong>{a.service.name}</strong> · {a.service.variant}</span><span className="agenda-who">{a.customer.name||'Cliente sem nome'}{a.customer.phone&&<> · <a href={whatsapp(a.customer.phone)} target="_blank" rel="noopener noreferrer">WhatsApp</a></>}</span></li>)}</ul>:<p>Nenhum atendimento marcado nos próximos 30 dias.</p>}
+   {!next?<p role="status">Carregando…</p>:next.length?<ul className="agenda-list">{next.map(a=><li key={a.id} className="agenda-item"><span className="agenda-time">{when(a.starts_at)}</span><span className="agenda-what"><strong>{a.service.name}</strong>{a.service.variant?` · ${a.service.variant}`:''}</span><span className="agenda-who">{a.customer.name||'Cliente sem nome'}{a.customer.phone&&<> · <a href={whatsapp(a.customer.phone)} target="_blank" rel="noopener noreferrer">WhatsApp</a></>}</span></li>)}</ul>:<p>Nenhum atendimento marcado nos próximos 30 dias.</p>}
   </div>
   <div className="cal-head"><button onClick={()=>setMonth(shiftMonth(month,-1))} aria-label="Mês anterior">‹</button><h3>{monthLabel(month)}</h3><button onClick={()=>setMonth(shiftMonth(month,1))} aria-label="Próximo mês">›</button>
    {month!==monthStart(today)&&<button className="inline-link" onClick={()=>{setMonth(monthStart(today));setSelected(today);}}>Hoje</button>}
