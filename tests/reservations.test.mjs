@@ -42,7 +42,7 @@ async function fixture({enabled=true}={}){
  // Moves an appointment in time without the opening-hours trigger, to simulate "now" being close to it.
  async function shift(appointment,startsIn,bookedAgo='0 minutes'){
   await pg.exec('set session_replication_role=replica');
-  try{await pg.query(`update public.appointments set starts_at=now()+$2::interval,ends_at=now()+$2::interval+interval '60 minutes',busy_until=now()+$2::interval+interval '75 minutes',booked_at=now()-$3::interval where id=$1`,[appointment,startsIn,bookedAgo]);}
+  try{await pg.query(`update public.appointments set starts_at=now()+$2::interval,ends_at=now()+$2::interval+interval '60 minutes',busy_until=now()+$2::interval+interval '60 minutes',buffer_minutes=0,booked_at=now()-$3::interval where id=$1`,[appointment,startsIn,bookedAgo]);}
   finally{await pg.exec('set session_replication_role=origin');}
  }
  const row=async appointment=>(await pg.query('select * from public.appointments where id=$1',[appointment])).rows[0];
@@ -86,9 +86,10 @@ test('agendamento usa identidade da sessão, congela valores, é idempotente e r
   assert.equal(first.ok,true);const a=first.appointment;
   assert.equal(a.status,'confirmed');assert.equal(a.price_cents,15000);assert.equal(a.fee_cents,4500);assert.equal(a.rule_version,RULE);
   const again=await f.book(f.ana,1,f.at('14:00'),request);assert.equal(again.repeated,true);assert.equal(again.appointment.id,a.id);
-  const stored=await f.row(a.id);assert.equal(stored.customer_id,f.ana);assert.ok(stored.rule_accepted_at);assert.equal(stored.busy_until.getTime()-stored.ends_at.getTime(),15*60000);
+  const stored=await f.row(a.id);assert.equal(stored.customer_id,f.ana);assert.ok(stored.rule_accepted_at);assert.equal(stored.busy_until.getTime()-stored.ends_at.getTime(),0,'sem intervalo entre atendimentos (decisão de 26/11)');
   assert.ok(!(await f.slots(1)).includes(iso(f.at('14:00'))),'horário marcado sai da lista');
-  assert.ok(!(await f.slots(1)).includes(iso(f.at('13:00'))),'intervalo de 15 minutos também é respeitado');
+  assert.ok((await f.slots(1)).includes(iso(f.at('13:00'))),'sem intervalo: o horário que termina às 14h continua livre');
+  assert.ok(!(await f.slots(1)).includes(iso(f.at('13:30'))),'mas nada que invada o horário das 14h');
   assert.deepEqual(await f.book(f.bia,1,f.at('14:00')),{ok:false,reason:'slot_unavailable'});
   assert.deepEqual(await f.book(f.bia,1,f.at('14:05')),{ok:false,reason:'slot_unavailable'},'fora da grade de 15 minutos');
   assert.deepEqual(await f.book(f.bia,1,f.at('08:00')),{ok:false,reason:'slot_unavailable'},'manhã restrita continua fechada');
@@ -147,7 +148,7 @@ test('remarcação livre até 24 h antes, inclusive sobre o próprio horário; d
   assert.equal((await f.row(a.id)).reschedule_count,1);
   assert.equal((await f.move(f.ana,a.id,f.at('14:30'))).repeated,true);
   assert.deepEqual(await f.move(f.ana,a.id,f.at('18:00')),{ok:false,reason:'slot_unavailable'});
-  assert.ok((await f.slots(1)).includes(iso(f.at('13:15'))),'faixa que só conflitava com o horário antigo foi liberada');
+  assert.ok((await f.slots(1)).includes(iso(f.at('13:30'))),'faixa que só conflitava com o horário antigo foi liberada');
   await f.shift(a.id,'10 hours','3 hours');
   assert.deepEqual(await f.move(f.ana,a.id,f.at('20:00')),{ok:false,reason:'too_late'});
   assert.equal((await f.mine(f.ana)).items[0].free_change,false);

@@ -203,3 +203,8 @@ input,select,textarea{font-size:16px}
 @media(max-width:600px){.cal-grid{gap:4px}.cal-day{padding:4px;border-radius:9px;font-size:13px}.cal-day em{font-size:11px;min-width:16px;padding:0 4px}}
 .side-nav ul{align-content:start}.side-nav{display:block}
 .admin-whatsapp .whatsapp-form{max-width:480px}
+/* Agenda paralela */
+.agenda-item.is-manual{border-left:4px solid var(--gold)}
+.agenda-tag{grid-column:2;font-size:12px;font-weight:700;color:var(--gold-text)}
+.agenda-actions{grid-column:2;display:flex;gap:14px}
+.manual-form{max-width:560px}.manual-form h3{margin-top:0}
