@@ -1,20 +1,22 @@
 import React,{useEffect,useRef,useState} from 'react';
 
 // Fotos de procedimentos finalizados, com autorização das clientes para divulgação.
-// pos = ponto da foto que fica sempre visível quando a moldura corta as bordas.
+// pos = ponto da foto que fica sempre visível se a moldura cortar as bordas.
+// As fotos já são recortadas no formato da moldura (4:5), com o trabalho no centro.
 export const slides=[
- {src:'/media/resultados/cilios-01.webp',label:'Extensão de cílios',pos:'50% 45%'},
- {src:'/media/resultados/labios-01.webp',label:'Micropigmentação labial',pos:'50% 60%'},
- {src:'/media/resultados/cilios-02.webp',label:'Extensão de cílios',pos:'45% 50%'},
- {src:'/media/resultados/labios-02.webp',label:'Micropigmentação labial',pos:'50% 55%'},
- {src:'/media/resultados/cilios-03.webp',label:'Extensão de cílios',pos:'50% 45%'},
- {src:'/media/resultados/labios-03.webp',label:'Micropigmentação labial',pos:'40% 50%'},
- {src:'/media/resultados/cilios-04.webp',label:'Extensão de cílios',pos:'55% 50%'},
- {src:'/media/resultados/labios-04.webp',label:'Micropigmentação labial',pos:'50% 50%'},
- {src:'/media/resultados/cilios-05.webp',label:'Extensão de cílios',pos:'50% 50%'},
- {src:'/media/resultados/cilios-06.webp',label:'Extensão de cílios',pos:'45% 45%'},
- {src:'/media/resultados/cilios-07.webp',label:'Extensão de cílios',pos:'55% 50%'},
- {src:'/media/resultados/cilios-08.webp',label:'Extensão de cílios',pos:'55% 50%'},
+ {src:'/media/resultados/cilios-09.webp',label:'Extensão de cílios',pos:'50% 50%'},
+ {src:'/media/resultados/labios-05.webp',label:'Micropigmentação labial',pos:'50% 50%'},
+ {src:'/media/resultados/cilios-10.webp',label:'Extensão de cílios',pos:'50% 50%'},
+ {src:'/media/resultados/cilios-11.webp',label:'Extensão de cílios',pos:'50% 50%'},
+ {src:'/media/resultados/labios-06.webp',label:'Micropigmentação labial',pos:'50% 50%'},
+ {src:'/media/resultados/cilios-12.webp',label:'Extensão de cílios',pos:'50% 50%'},
+ {src:'/media/resultados/cilios-13.webp',label:'Extensão de cílios',pos:'50% 50%'},
+ {src:'/media/resultados/labios-07.webp',label:'Micropigmentação labial',pos:'50% 50%'},
+ {src:'/media/resultados/lash-lifting-01.webp',label:'Lash Lifting',pos:'50% 50%'},
+ {src:'/media/resultados/cilios-14.webp',label:'Extensão de cílios',pos:'50% 50%'},
+ {src:'/media/resultados/sobrancelha-01.webp',label:'Sobrancelhas',pos:'50% 50%'},
+ {src:'/media/resultados/labios-08.webp',label:'Micropigmentação labial',pos:'50% 50%'},
+ {src:'/media/resultados/cilios-15.webp',label:'Extensão de cílios',pos:'50% 50%'},
 ];
 // Cada foto fica 1,5 s (pedido do usuário em 21/11); com "reduzir movimento", 3 s.
 const INTERVAL=1500;
