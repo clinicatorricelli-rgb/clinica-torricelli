@@ -67,7 +67,7 @@ export default function AdminBookings({view='upcoming'}){
  {toMark.length?toMark.map(i=><article className="availability-change" key={i.id}>
   <strong>{when(i.starts_at)} · {i.service.name} · {i.service.variant}</strong><p>{customer(i.customer)} · taxa possível: {money(i.fee_cents)}</p>
   <div className="actions"><button disabled={busy} onClick={()=>mark(i,'completed','Confirmar presença','Presença registrada.')}>Compareceu</button>
-   <button disabled={busy} onClick={()=>mark(i,'no_show_fee','Registrar falta e cobrar','Falta registrada e taxa confirmada.')}>Faltou: cobrar taxa</button>
+   {i.source!=='manual'&&<button disabled={busy} onClick={()=>mark(i,'no_show_fee','Registrar falta e cobrar','Falta registrada e taxa confirmada.')}>Faltou: cobrar taxa</button>}
    <button disabled={busy} onClick={()=>mark(i,'no_show_waived','Registrar falta sem taxa','Falta registrada sem taxa.',true)}>Faltou: dispensar taxa</button></div>
   {['completed','no_show_fee','no_show_waived'].map(o=><React.Fragment key={o}>{box(`${i.id}:${o}`)}</React.Fragment>)}
  </article>):<p>Nenhum atendimento passado esperando marcação.</p>}</>}

@@ -78,6 +78,16 @@ const db = {
     if (!sql) throw new Error('database_not_configured');
     await sql`select private.finish_owner_whatsapp(${id}::uuid,${outcome}::text,${providerId}::text,${code}::text)`;
   },
+  // Confirmação e lembretes das clientes no WhatsApp.
+  async prepareClientWhatsapp() {
+    if (!sql) throw new Error('database_not_configured');
+    const [row] = await sql`select private.prepare_client_whatsapp() as job`;
+    return row.job;
+  },
+  async finishClientWhatsapp(id: string, outcome: string, providerId: string | null, code: string | null) {
+    if (!sql) throw new Error('database_not_configured');
+    await sql`select private.finish_client_whatsapp(${id}::uuid,${outcome}::text,${providerId}::text,${code}::text)`;
+  },
   async unsubscribe(token: string) {
     if (!sql) throw new Error('database_not_configured');
     const [row] = await sql`select private.unsubscribe_availability_email(${token}::text) as revoked`;

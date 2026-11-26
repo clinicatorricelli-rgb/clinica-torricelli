@@ -2,10 +2,17 @@
 // (360dialog / API oficial do WhatsApp) com modelos aprovados pela Meta.
 // O número de destino e os dados vêm só do banco (private.prepare_owner_whatsapp).
 
+// v1: primeiros modelos aprovados (25/11). v2: formato pedido pelo usuário (agenda em tópicos,
+// saudação e aviso em linhas). O v2 só pode ser publicado depois de a Meta aprovar esses modelos.
 export const TEMPLATES = {
  daily: 'clinica_agenda_do_dia',
  alert: 'clinica_aviso_agenda',
 };
+export const TEMPLATES_V2 = {
+ daily: n => `clinica_agenda_dia_${n}`,
+ alert: 'clinica_aviso_agenda_v2',
+};
+export const DAILY_MAX_LINES = 6;
 export const PANEL_URL = 'https://clinicatorricelli.com.br/?view=admin';
 const API = 'https://waba-v2.360dialog.io/messages';
 const tz = 'America/Sao_Paulo';
@@ -39,6 +46,25 @@ export function agendaLine(items, max = 700) {
  return out;
 }
 
+const greeting = now => { const h = Number(new Intl.DateTimeFormat('en-GB', {timeZone: tz, hour: '2-digit', hourCycle: 'h23'}).format(now)); return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'; };
+const capitalize = t => t.charAt(0).toUpperCase() + t.slice(1);
+
+// Formato v2: agenda em tópicos (um modelo por quantidade de atendimentos) e aviso em linhas.
+export function buildOwnerWhatsappV2(job, now = new Date()) {
+ const v1 = buildOwnerWhatsapp(job); // valida e reaproveita os textos
+ const f = job.facts;
+ if (job.kind === 'daily_agenda' || job.kind === 'test') {
+  const items = f.items, n = Math.min(items.length, DAILY_MAX_LINES);
+  const tomorrow = v1.params[2];
+  if (!n) return {template: TEMPLATES_V2.daily(0), params: [v1.params[0], tomorrow]};
+  const lines = items.slice(0, n).map(i => clean(`${time(i.starts_at)} ${firstName(i.customer_name)} (${i.service_name})`, 120));
+  if (items.length > DAILY_MAX_LINES) lines[n - 1] = `+ ${plural(items.length - n + 1, 'atendimento', 'atendimentos')} (veja no painel)`;
+  return {template: TEMPLATES_V2.daily(n), params: [v1.params[0], plural(items.length, 'atendimento', 'atendimentos'), ...lines, tomorrow]};
+ }
+ const [what, name, service, when] = v1.params;
+ return {template: TEMPLATES_V2.alert, params: [greeting(now), clean(capitalize(what).replace(/\*/g, '')), name, service, when]};
+}
+
 // Devolve o modelo e as variáveis (na ordem {{1}}, {{2}}...).
 export function buildOwnerWhatsapp(job) {
  if (!job || !UUID.test(job.id || '') || !PHONE.test(job.to || '') || !job.facts) throw new Error('invalid_private_job');
@@ -56,9 +82,12 @@ export function buildOwnerWhatsapp(job) {
  return {template: TEMPLATES.alert, params: [clean(what), clean(f.customer_name || 'Cliente sem nome', 100), clean(service, 150), clean(`${dayMonth(f.starts_at)} às ${time(f.starts_at)}`)]};
 }
 
-export async function sendOwnerWhatsapp(job, message, key, fetchImpl) {
+export async function sendOwnerWhatsapp(job, message, key, fetchImpl) { return sendTemplate(job.to, message, key, fetchImpl); }
+
+// Envio de um modelo aprovado pela 360dialog (API oficial do WhatsApp).
+export async function sendTemplate(to, message, key, fetchImpl) {
  const body = {
-  messaging_product: 'whatsapp', recipient_type: 'individual', to: job.to.replace(/\D/g, ''), type: 'template',
+  messaging_product: 'whatsapp', recipient_type: 'individual', to: to.replace(/\D/g, ''), type: 'template',
   template: {name: message.template, language: {code: 'pt_BR'}, components: [{type: 'body', parameters: message.params.map(text => ({type: 'text', text}))}]},
  };
  try {
@@ -75,7 +104,7 @@ export async function sendOwnerWhatsapp(job, message, key, fetchImpl) {
 }
 
 // Até `limit` alertas por chamada. Sem a chave da 360dialog, nada é consumido da fila.
-export async function processOwnerWhatsapp({db, whatsappKey, fetchImpl = fetch, limit = 3}) {
+export async function processOwnerWhatsapp({db, whatsappKey, fetchImpl = fetch, limit = 3, templates = 'v2', now = () => new Date()}) {
  await db.markOwnerWhatsappProvider(Boolean(whatsappKey));
  if (!whatsappKey) return 'provider_not_configured';
  await db.enqueueOwnerDailyWhatsapp();
@@ -85,7 +114,7 @@ export async function processOwnerWhatsapp({db, whatsappKey, fetchImpl = fetch, 
   if (!job) break;
   if (job.skip) { last = 'skipped'; continue; }
   let message;
-  try { message = buildOwnerWhatsapp(job); } catch { await db.finishOwnerWhatsapp(job.id, 'failed', null, 'invalid_private_job'); last = 'failed'; continue; }
+  try { message = templates === 'v2' ? buildOwnerWhatsappV2(job, now()) : buildOwnerWhatsapp(job); } catch { await db.finishOwnerWhatsapp(job.id, 'failed', null, 'invalid_private_job'); last = 'failed'; continue; }
   const result = await sendOwnerWhatsapp(job, message, whatsappKey, fetchImpl);
   await db.finishOwnerWhatsapp(job.id, result.outcome, result.providerId, result.code);
   last = result.outcome;
