@@ -116,7 +116,7 @@ test('mensagens: modelo certo, variáveis sem quebra de linha e envio pela 360di
  const ok=await processOwnerWhatsapp({db,whatsappKey:'chave-ficticia',fetchImpl:async(url,o)=>{calls.push({url,o});return new Response(JSON.stringify({messages:[{id:'wamid.FICTICIO'}]}),{status:200});}});
  assert.equal(ok,'accepted');
  assert.equal(calls[0].url,'https://waba-v2.360dialog.io/messages');assert.equal(calls[0].o.headers['D360-API-KEY'],'chave-ficticia');
- const sent=JSON.parse(calls[0].o.body);assert.equal(sent.to,'5511988887777');assert.equal(sent.template.name,TEMPLATES.alert);assert.equal(sent.template.language.code,'pt_BR');
+ const sent=JSON.parse(calls[0].o.body);assert.equal(sent.to,'5511988887777');assert.equal(sent.template.name,'clinica_aviso_agenda_v2');assert.equal(sent.template.language.code,'pt_BR');
  assert.deepEqual(done,[[id,'accepted','wamid.FICTICIO',null]]);
  const done2=[];const db2={...db,prepareOwnerWhatsapp:async()=>done2.length?null:{id,kind:'booked',to:OWNER,facts:{customer_name:'Ana',service_name:'S',starts_at:'2026-12-01T17:00:00Z'}},finishOwnerWhatsapp:async(...a)=>done2.push(a)};
  assert.equal(await processOwnerWhatsapp({db:db2,whatsappKey:'k',fetchImpl:async()=>new Response('{"error":"telefone 5511..."}',{status:400})}),'failed');

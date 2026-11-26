@@ -3,6 +3,7 @@ import SideNav,{Icon} from './SideNav';
 import MyAppointments from './MyAppointments';
 import AlertPreferences from './AlertPreferences';
 import ClientIntake from './ClientIntake';
+import WhatsappConsent from './WhatsappConsent';
 
 // Área da cliente: menu à esquerda (agendamentos, taxas, dados, ficha, avisos, sair) e,
 // no primeiro acesso, um passo a passo até a ficha preenchida. Depois disso, não aparece mais.
@@ -36,7 +37,7 @@ export default function AccountArea({session,profile,profileComplete,profileForm
   {key:'taxas',label:'Taxas',icon:'receipt'},
   {key:'dados',label:'Meus dados',icon:'user'},
   {key:'ficha',label:'Minha ficha',icon:'clipboard'},
-  {key:'avisos',label:'Avisos de vagas',icon:'bell'},
+  {key:'avisos',label:'Avisos e lembretes',icon:'bell'},
   {key:'sair',label:'Sair da conta',icon:'logout',onClick:onSignOut},
  ];
  const firstName=(profile?.display_name||'').trim().split(/\s+/)[0];
@@ -59,6 +60,6 @@ export default function AccountArea({session,profile,profileComplete,profileForm
   {section==='dados'&&<section className="account-section"><h2>Meus dados</h2><p className="account-details-hint">E-mail da conta: <strong>{session.user.email}</strong></p>{profileForm}
    <p className="account-details-hint">Quer trocar a senha? <button className="inline-link" onClick={onChangePassword}>Definir nova senha</button></p></section>}
   {section==='ficha'&&<section className="account-section"><p className="account-details-hint">A ficha é obrigatória para extensão de cílios. Atualize se algo mudar na sua saúde.</p>{intake}</section>}
-  {section==='avisos'&&<AlertPreferences userId={uid}/>}
+  {section==='avisos'&&<><WhatsappConsent/><AlertPreferences userId={uid}/></>}
  </SideNav>;
 }

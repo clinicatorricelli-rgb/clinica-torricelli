@@ -5,6 +5,9 @@ const clock=s=>new Intl.DateTimeFormat('pt-BR',{hour:'2-digit',minute:'2-digit',
 export function AvailabilityPreview({selectedService=1,session=null,booking=null,onBooked=()=>{},onAccount=()=>{},onRuleChanged=()=>{}}){
  const [day,setDay]=useState(today),[service,setService]=useState(selectedService),[slots,setSlots]=useState([]),[loading,setLoading]=useState(false),[error,setError]=useState(''),[reload,setReload]=useState(0);
  const [chosen,setChosen]=useState(null),[accepted,setAccepted]=useState(false),[request,setRequest]=useState(null),[busy,setBusy]=useState(false),[result,setResult]=useState(null);
+ // WhatsApp da confirmação e dos lembretes: escolha da cliente, lembrada para os próximos agendamentos.
+ const [wa,setWa]=useState(null);
+ useEffect(()=>{let alive=true;setWa(null);if(!supabase||!session)return;supabase.rpc('my_whatsapp_consent').then(({data,error})=>{if(alive)setWa(error?{saved:false,checked:false,unavailable:true}:{saved:!!data?.enabled,checked:!!data?.enabled});});return()=>{alive=false;};},[session?.user?.id]);
  useEffect(()=>setService(selectedService),[selectedService]);
  useEffect(()=>setChosen(null),[day,service]);
  useEffect(()=>{let alive=true;if(!supabase)return;setLoading(true);setError('');supabase.rpc('available_slots',{p_service_id:Number(service),p_day:day}).then(({data,error})=>{if(!alive)return;if(error){setError('Não foi possível consultar os horários.');setSlots([]);}else setSlots(data||[]);setLoading(false);});return()=>{alive=false;};},[day,service,reload]);
@@ -13,6 +16,8 @@ export function AvailabilityPreview({selectedService=1,session=null,booking=null
  function choose(slot){setChosen(slot);setAccepted(false);setRequest(crypto.randomUUID());setResult(null);}
  async function confirm(e){e.preventDefault();if(!chosen||!accepted||busy)return;setBusy(true);setResult(null);
   try{
+   // A escolha precisa estar salva antes do agendamento, que já programa as mensagens.
+   if(wa&&!wa.unavailable&&wa.checked!==wa.saved){const r=await supabase.rpc('set_whatsapp_consent',{p_enabled:wa.checked});if(!r.error)setWa(w=>({...w,saved:w.checked}));}
    const {data,error}=await supabase.rpc('book_appointment',{p_service_id:Number(service),p_start:chosen.starts_at,p_rule_version:booking.rule.version,p_request_id:request});
    if(error)throw error;
    if(data.ok){setResult({ok:true,text:`Agendamento confirmado: ${svc?.name} · ${svc?.variant}, ${when(data.appointment.starts_at)}. Para remarcar ou cancelar, use Minha conta.`});setChosen(null);onBooked();}
@@ -35,6 +40,7 @@ export function AvailabilityPreview({selectedService=1,session=null,booking=null
   <p className="rule-summary">{ruleSummary(booking.rule,chosen.fee_cents??lateFee(chosen.price_cents))}</p>
   <div className="rule-box" tabIndex={0} aria-label="Regra completa de faltas e cancelamentos">{booking.rule.body}</div>
   <label className="accept"><input type="checkbox" checked={accepted} onChange={e=>setAccepted(e.target.checked)} required/><span>Li e aceito a regra de faltas e cancelamentos acima.</span></label>
+  {wa&&!wa.unavailable&&<label className="accept"><input type="checkbox" checked={wa.checked} onChange={e=>{const c=e.target.checked;setWa(w=>({...w,checked:c}));}}/><span>Quero receber pelo WhatsApp a confirmação e os lembretes deste e dos próximos horários (27 horas, 2 horas e 20 minutos antes). Posso desligar quando quiser em Minha conta.</span></label>}
   <div className="actions"><button className="primary" disabled={!accepted||busy}>{busy?'Aguarde…':'Confirmar agendamento'}</button><button type="button" onClick={()=>setChosen(null)} disabled={busy}>Escolher outro horário</button></div>
  </form>}
  {result&&<div className="message" role={result.ok?'status':'alert'}>{result.text}{['intake_required','profile_incomplete','outstanding_fee'].includes(result.reason)&&<> <button type="button" className="inline-link" onClick={()=>onAccount(result.reason)}>Ir para Minha conta</button></>}</div>}
