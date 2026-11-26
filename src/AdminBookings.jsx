@@ -65,7 +65,7 @@ export default function AdminBookings({view='upcoming'}){
  </article>):<p>Nenhuma taxa em aberto.</p>}
  <h3>Marcar presença</h3>
  {toMark.length?toMark.map(i=><article className="availability-change" key={i.id}>
-  <strong>{when(i.starts_at)} · {i.service.name} · {i.service.variant}</strong><p>{customer(i.customer)} · taxa possível: {money(i.fee_cents)}</p>
+  <strong>{when(i.starts_at)} · {i.service.name}{i.service.variant?` · ${i.service.variant}`:''}</strong><p>{customer(i.customer)} · taxa possível: {money(i.fee_cents)}</p>
   <div className="actions"><button disabled={busy} onClick={()=>mark(i,'completed','Confirmar presença','Presença registrada.')}>Compareceu</button>
    {i.source!=='manual'&&<button disabled={busy} onClick={()=>mark(i,'no_show_fee','Registrar falta e cobrar','Falta registrada e taxa confirmada.')}>Faltou: cobrar taxa</button>}
    <button disabled={busy} onClick={()=>mark(i,'no_show_waived','Registrar falta sem taxa','Falta registrada sem taxa.',true)}>Faltou: dispensar taxa</button></div>
@@ -73,7 +73,7 @@ export default function AdminBookings({view='upcoming'}){
  </article>):<p>Nenhum atendimento passado esperando marcação.</p>}</>}
  {view==='upcoming'&&<>
  {upcoming.length?upcoming.map(i=><article className="availability-change" key={i.id}>
-  <strong>{when(i.starts_at)}–{clock(i.ends_at)} · {i.service.name} · {i.service.variant}</strong>
+  <strong>{when(i.starts_at)}–{clock(i.ends_at)} · {i.service.name}{i.service.variant?` · ${i.service.variant}`:''}</strong>
   <p>{customer(i.customer)}{i.reschedule_count>0?` · remarcado ${i.reschedule_count}×`:''}</p>
   <button disabled={busy} onClick={()=>ask({key:`${i.id}:cancel`,fn:'admin_cancel_appointment',args:n=>({p_id:i.id,p_note:n}),label:'Cancelar pela clínica',needsNote:true,
    warning:'Cancelamento pela clínica não gera taxa. A cliente recebe um e-mail automático; se quiser, avise também pelo WhatsApp.',done:'Agendamento cancelado pela clínica. A cliente vai receber um e-mail.'})}>Cancelar pela clínica</button>{box(`${i.id}:cancel`)}
