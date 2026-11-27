@@ -1,7 +1,7 @@
 import { timingSafeEqual } from 'node:crypto';
 import { processBookingEmails } from './booking-email.mjs';
 import { processDailyAgenda } from './daily-agenda.mjs';
-import { processOwnerWhatsapp } from './owner-whatsapp.mjs';
+import { processOwnerWhatsapp, createPacer } from './owner-whatsapp.mjs';
 import { processClientWhatsapp } from './client-whatsapp.mjs';
 
 // Links in e-mails point to the clinic's own domain. The previous Pages address
@@ -100,7 +100,7 @@ async function sendEmail(job, payload, key, fetchImpl) {
   }
 }
 
-export function createAvailabilityEmailHandler({db, fetchImpl = fetch, cronSecret, resendKey, supabaseUrl, webhookHandler, whatsappKey}) {
+export function createAvailabilityEmailHandler({db, fetchImpl = fetch, cronSecret, resendKey, supabaseUrl, webhookHandler, whatsappKey, whatsappPacing = {}}) {
   return async function handle(request) {
     let corsHeaders = {};
     try {
@@ -157,15 +157,17 @@ export function createAvailabilityEmailHandler({db, fetchImpl = fetch, cronSecre
       if (typeof db.prepareDailyAgenda === 'function') {
         try { daily = await processDailyAgenda({db, resendKey, fetchImpl}); } catch { daily = 'temporarily_unavailable'; }
       }
-      // Alertas da Eduarda no WhatsApp: isolados, como os e-mails acima.
+      // Alertas da Eduarda no WhatsApp: isolados, como os e-mails acima. Um só ritmo para
+      // os envios da Eduarda e das clientes: 2 s entre um e outro.
+      const pacer = createPacer(whatsappPacing);
       let whatsapp;
       if (typeof db.prepareOwnerWhatsapp === 'function') {
-        try { whatsapp = await processOwnerWhatsapp({db, whatsappKey, fetchImpl}); } catch { whatsapp = 'temporarily_unavailable'; }
+        try { whatsapp = await processOwnerWhatsapp({db, whatsappKey, fetchImpl, pacer}); } catch { whatsapp = 'temporarily_unavailable'; }
       }
       // Mensagens às clientes (confirmação e lembretes), também isoladas.
       let clientWhatsapp;
       if (typeof db.prepareClientWhatsapp === 'function') {
-        try { clientWhatsapp = await processClientWhatsapp({db, whatsappKey, fetchImpl}); } catch { clientWhatsapp = 'temporarily_unavailable'; }
+        try { clientWhatsapp = await processClientWhatsapp({db, whatsappKey, fetchImpl, pacer}); } catch { clientWhatsapp = 'temporarily_unavailable'; }
       }
       const withBooking = status => json({status, ...(booking === undefined ? {} : {booking}), ...(daily === undefined ? {} : {daily}), ...(whatsapp === undefined ? {} : {whatsapp}), ...(clientWhatsapp === undefined ? {} : {clientWhatsapp})});
       // Enqueue commits before preparation: publication materialization can
