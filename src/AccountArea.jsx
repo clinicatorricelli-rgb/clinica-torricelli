@@ -7,11 +7,13 @@ import WhatsappConsent from './WhatsappConsent';
 
 // Área da cliente: menu à esquerda (agendamentos, taxas, dados, ficha, avisos, sair) e,
 // no primeiro acesso, um passo a passo até a ficha preenchida. Depois disso, não aparece mais.
+// Com a cliente logada, este menu é o único do site (pedido do usuário em 27/11): também leva
+// a "Agendar horário" (página de serviços) e "A clínica" (apresentação), que entram como filhos.
 const skipKey=id=>`torricelli-ficha-depois-${id}`;
 const read=k=>{try{return localStorage.getItem(k);}catch{return null;}};
 const write=(k,v)=>{try{localStorage.setItem(k,v);}catch{}};
 
-export default function AccountArea({session,profile,profileComplete,profileForm,bookingsVersion,onBookingsChanged,onBook,onSignOut,onChangePassword,focus}){
+export default function AccountArea({session,profile,profileComplete,profileForm,bookingsVersion,onBookingsChanged,onBook,onSignOut,onChangePassword,focus,section:outerSection,onSection,sitePage='account',onSite,children}){
  const uid=session.user.id;
  const [hasIntake,setHasIntake]=useState(null),[skipped,setSkipped]=useState(()=>read(skipKey(uid))==='1');
  useEffect(()=>{let alive=true;setHasIntake(null);
@@ -25,7 +27,11 @@ export default function AccountArea({session,profile,profileComplete,profileForm
  ];
  const pendingSteps=steps.filter(s=>!s.done).length;
  const firstAccess=hasIntake!==null&&(pendingSteps>0);
- const [section,setSection]=useState(null);
+ // A tela escolhida fica no site (main.jsx) para sobreviver à troca de página.
+ const [innerSection,setInnerSection]=useState(null);
+ const section=onSection?outerSection:innerSection;
+ const setSection=onSection||setInnerSection;
+ const choose=key=>{setSection(key);if(sitePage!=='account'&&onSite)onSite('account');};
  const [finished,setFinished]=useState(false);
  // Primeira escolha de tela: passo a passo enquanto faltar algo; depois, os agendamentos.
  useEffect(()=>{if(section||hasIntake===null)return;setSection(focus==='ficha'?'ficha':firstAccess?'inicio':'agendamentos');},[hasIntake,firstAccess,section,focus]);
@@ -34,16 +40,20 @@ export default function AccountArea({session,profile,profileComplete,profileForm
  const items=[
   ...(firstAccess||finished?[{key:'inicio',label:'Primeiros passos',icon:'check',badge:pendingSteps?`${3-pendingSteps}/3`:null}]:[]),
   {key:'agendamentos',label:'Meus agendamentos',icon:'calendar'},
+  ...(onSite?[{key:'site:services',label:'Agendar horário',icon:'plus',primary:true,onClick:()=>onSite('services')}]:[]),
   {key:'taxas',label:'Taxas',icon:'receipt'},
   {key:'dados',label:'Meus dados',icon:'user'},
   {key:'ficha',label:'Minha ficha',icon:'clipboard'},
-  {key:'avisos',label:'Avisos e lembretes',icon:'bell'},
+  {key:'avisos',label:'Avisos e lembretes (WhatsApp)',icon:'bell'},
+  ...(onSite?[{key:'div-site',divider:true,label:'Clínica Torricelli'},{key:'site:home',label:'A clínica',icon:'home',onClick:()=>onSite('home')}]:[]),
   {key:'sair',label:'Sair da conta',icon:'logout',onClick:onSignOut},
  ];
+ const active=sitePage==='account'?section:`site:${sitePage}`;
  const firstName=(profile?.display_name||'').trim().split(/\s+/)[0];
- if(!section)return <p role="status">Carregando sua conta…</p>;
+ if(!section&&sitePage==='account')return <p role="status">Carregando sua conta…</p>;
  const current=steps.find(s=>!s.done);
- return <SideNav title={firstName?`Olá, ${firstName}`:'Minha conta'} items={items} active={section} onSelect={setSection}>
+ if(sitePage!=='account')return <SideNav title={firstName?`Olá, ${firstName}`:'Minha conta'} items={items} active={active} onSelect={choose}>{children}</SideNav>;
+ return <SideNav title={firstName?`Olá, ${firstName}`:'Minha conta'} items={items} active={active} onSelect={choose}>
   {section==='inicio'&&<section className="checklist" aria-labelledby="checklist-title">
    <h2 id="checklist-title">{current?'Primeiros passos':'Tudo pronto!'}</h2>
    <p>{current?'Só na primeira vez: complete os passos abaixo e sua conta fica pronta para agendar.':'Sua conta está completa. Agora é só escolher o serviço e o horário.'}</p>
