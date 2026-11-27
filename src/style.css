@@ -208,3 +208,17 @@ input,select,textarea{font-size:16px}
 .agenda-tag{grid-column:2;font-size:12px;font-weight:700;color:var(--gold-text)}
 .agenda-actions{grid-column:2;display:flex;gap:14px}
 .manual-form{max-width:560px}.manual-form h3{margin-top:0}
+/* Menu da cliente logada (e do painel): botão bem visível logo abaixo do logo, fixo ao rolar
+   (pedido do usuário em 27/11), com separador para as páginas do site. */
+.client-shell{padding-top:6px}
+.side-divider{margin:14px 12px 4px;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-text);font-weight:700;list-style:none}
+.side-nav li button.is-primary{background:var(--brown);color:#fff;margin:4px 0}
+.side-nav li button.is-primary .icon{color:var(--gold-light)}
+.side-nav li button.is-primary:hover:not(:disabled){background:var(--brown-dark)}
+@media(max-width:860px){
+ .side-toggle{position:sticky;top:8px;z-index:30;background:var(--brown);color:#fff;border-color:var(--brown);box-shadow:0 12px 26px -16px rgba(47,22,6,.75);padding:14px 16px;font-size:16px;font-weight:700}
+ .side-toggle:hover:not(:disabled){background:var(--brown-dark)}
+ .side-toggle .icon{color:#fff}
+ .side-toggle b{color:var(--gold-light)}
+ .client-shell{padding-top:4px}
+}

@@ -15,13 +15,14 @@ const paths={
  menu:'M4 6h16M4 12h16M4 18h16',
  close:'M6 6l12 12M18 6 6 18',
  check:'M5 12.5l4.5 4.5L19 7',
+ plus:'M12 5v14M5 12h14',
 };
 export const Icon=({name,size=20})=><svg className="icon" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={paths[name]}/></svg>;
 
 // Menu lateral: fixo à esquerda no computador; no celular, botão "Menu" que abre a lista por cima.
 export default function SideNav({title,items,active,onSelect,children}){
  const [open,setOpen]=useState(false);
- const current=items.find(i=>i.key===active);
+ const current=items.find(i=>i.key===active&&!i.divider);
  useEffect(()=>{if(!open)return;const esc=e=>{if(e.key==='Escape')setOpen(false);};document.addEventListener('keydown',esc);return()=>document.removeEventListener('keydown',esc);},[open]);
  const pick=item=>{setOpen(false);if(item.onClick)item.onClick();else{onSelect(item.key);window.scrollTo({top:0});}};
  return <div className="side-layout">
@@ -29,7 +30,7 @@ export default function SideNav({title,items,active,onSelect,children}){
   {open&&<div className="side-backdrop" onClick={()=>setOpen(false)}/>}
   <nav id="side-menu" className={`side-nav${open?' is-open':''}`} aria-label={title}>
    <p className="side-title">{title}</p>
-   <ul>{items.map(item=><li key={item.key}><button className={item.key===active?'is-active':''} aria-current={item.key===active?'page':undefined} onClick={()=>pick(item)}>
+   <ul>{items.map(item=>item.divider?<li key={item.key} className="side-divider" role="presentation">{item.label}</li>:<li key={item.key}><button className={`${item.key===active?'is-active':''}${item.primary?' is-primary':''}`} aria-current={item.key===active?'page':undefined} onClick={()=>pick(item)}>
     <Icon name={item.icon}/><span>{item.label}</span>{item.badge?<em className="side-badge">{item.badge}</em>:null}</button></li>)}</ul>
   </nav>
   <div className="side-content">{children}</div>
