@@ -155,3 +155,52 @@ test('retorno de status: segredo conferido no banco, status só avança, motivo 
   assert.equal((await q(f,"select count(*)::int n from pg_tables where schemaname='private' and tablename='whatsapp_webhook_settings' and rowsecurity"))[0].n,1);
  }finally{await f.pg.close();}
 });
+
+test('remarcação e cancelamento: só com changes_enabled; modelo conforme quem cancelou',async()=>{
+ const f=await fixture();try{
+  await f.as(f.ana,()=>f.rpc('public.set_whatsapp_consent($1)',[true]));
+  const pending=async id=>(await q(f,"select kind from private.client_whatsapp_messages where appointment_id=$1 and status='pending' order by send_at,kind",[id])).map(r=>r.kind);
+  // Desligado: remarcar continua com a confirmação; cancelar não gera mensagem.
+  const a=(await f.book(f.at('14:00'))).appointment;
+  await f.as(f.ana,()=>f.rpc('public.reschedule_appointment($1,$2)',[a.id,f.at('15:00')]));
+  assert.ok((await pending(a.id)).includes('confirmation'));
+  await f.as(f.ana,()=>f.rpc('public.cancel_appointment($1)',[a.id]));
+  assert.deepEqual(await pending(a.id),[]);
+  // Ligado.
+  await f.pg.query('update private.client_whatsapp_settings set enabled=true,changes_enabled=true');
+  const b=(await f.book(f.at('16:00'))).appointment;
+  assert.ok((await pending(b.id)).includes('confirmation'),'agendamento novo continua com a confirmação');
+  await f.as(f.ana,()=>f.rpc('public.reschedule_appointment($1,$2)',[b.id,f.at('17:00')]));
+  const after=await pending(b.id);
+  assert.ok(after.includes('rescheduled')&&!after.includes('confirmation'),'remarcou: modelo de remarcação no lugar da confirmação');
+  assert.ok(after.includes('reminder_2h')&&after.includes('reminder_20m'),'lembretes refeitos');
+  await f.as(f.ana,()=>f.rpc('public.cancel_appointment($1)',[b.id]));
+  assert.deepEqual(await pending(b.id),['cancelled_client'],'cancelou: só o aviso de cancelamento, lembretes descartados');
+  // O aviso de cancelamento sai mesmo com o atendimento cancelado (os demais, não).
+  await f.pg.query("update private.client_whatsapp_messages set next_attempt_at=now()-interval '1 minute',send_at=now()-interval '1 minute' where appointment_id=$1 and kind='cancelled_client'",[b.id]);
+  const job=(await q(f,'select private.prepare_client_whatsapp() as j'))[0].j;
+  assert.equal(job.kind,'cancelled_client');assert.equal(job.to,'+5511900000001');
+  // Cancelado pela clínica: modelo da clínica.
+  const cr=await f.book(f.at('18:00'));const c=cr.appointment;assert.ok(c,JSON.stringify(cr));
+  await f.as(f.admin,()=>f.rpc('public.admin_cancel_appointment($1,$2)',[c.id,'Teste fictício']),'aal2');
+  assert.deepEqual(await pending(c.id),['cancelled_clinic']);
+  // Sem aceite, nada.
+  await f.as(f.ana,()=>f.rpc('public.set_whatsapp_consent($1)',[false]));
+  const dr=await f.book(f.at('15:00'));const d=dr.appointment;assert.ok(d,JSON.stringify(dr));
+  await f.as(f.ana,()=>f.rpc('public.cancel_appointment($1)',[d.id]));
+  assert.equal((await q(f,'select count(*)::int n from private.client_whatsapp_messages where appointment_id=$1',[d.id]))[0].n,0);
+ }finally{await f.pg.close();}
+});
+
+test('modelos de remarcação e cancelamento: nomes e 4 variáveis, iguais aos enviados à Meta',async()=>{
+ const defs=JSON.parse(readFileSync(new URL('../supabase/functions/_shared/whatsapp-templates-v3.json',import.meta.url),'utf8'));
+ const id='11111111-1111-4111-8111-111111111111',to='+5511900000001',facts={customer_name:'Ana Fictícia',service_name:'Lash Lifting',starts_at:'2026-12-04T17:30:00Z'};
+ for(const kind of ['rescheduled','cancelled_client','cancelled_clinic']){
+  const m=buildClientWhatsapp({id,to,kind,facts});
+  const def=defs.find(d=>d.name===m.template);assert.ok(def,`${m.template} definido`);
+  const body=def.components.find(c=>c.type==='BODY');
+  assert.equal(new Set(body.text.match(/\{\{\d+\}\}/g)).size,m.params.length);
+  assert.deepEqual(m.params,['Ana','Lash Lifting','sexta-feira, 04/12','14:30']);
+  assert.equal(def.category,'UTILITY');
+ }
+});

@@ -1,0 +1,110 @@
+[
+ {
+  "name": "clinica_remarcacao_cliente",
+  "category": "UTILITY",
+  "language": "pt_BR",
+  "allow_category_change": true,
+  "components": [
+   {
+    "type": "BODY",
+    "text": "Oi, {{1}}! 🩷\nSeu horário de {{2}} foi remarcado para {{3}}, às {{4}}.\nSe porventura precisar mudar de novo, faça pelo site com mais de 24 horas de antecedência, sem custo.\nTe espero!",
+    "example": {
+     "body_text": [
+      [
+       "Ana",
+       "Lash Lifting",
+       "sexta-feira, 04/12",
+       "14:30"
+      ]
+     ]
+    }
+   },
+   {
+    "type": "FOOTER",
+    "text": "Clínica Torricelli"
+   },
+   {
+    "type": "BUTTONS",
+    "buttons": [
+     {
+      "type": "URL",
+      "text": "Minha conta",
+      "url": "https://clinicatorricelli.com.br/?view=account"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "clinica_cancelamento_cliente",
+  "category": "UTILITY",
+  "language": "pt_BR",
+  "allow_category_change": true,
+  "components": [
+   {
+    "type": "BODY",
+    "text": "Oi, {{1}}! 🩷\nO cancelamento do seu horário de {{2}} em {{3}}, às {{4}}, foi registrado.\nQuando quiser agendar de novo, é só acessar o site.\nAté breve!",
+    "example": {
+     "body_text": [
+      [
+       "Ana",
+       "Lash Lifting",
+       "sexta-feira, 04/12",
+       "14:30"
+      ]
+     ]
+    }
+   },
+   {
+    "type": "FOOTER",
+    "text": "Clínica Torricelli"
+   },
+   {
+    "type": "BUTTONS",
+    "buttons": [
+     {
+      "type": "URL",
+      "text": "Minha conta",
+      "url": "https://clinicatorricelli.com.br/?view=account"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name": "clinica_cancelamento_clinica",
+  "category": "UTILITY",
+  "language": "pt_BR",
+  "allow_category_change": true,
+  "components": [
+   {
+    "type": "BODY",
+    "text": "Oi, {{1}}! 🩷\nAqui é a Eduarda, da Clínica Torricelli. Precisei cancelar o seu horário de {{2}} em {{3}}, às {{4}}. Me desculpe pelo transtorno.\nMe chame por aqui para escolhermos um novo horário.",
+    "example": {
+     "body_text": [
+      [
+       "Ana",
+       "Lash Lifting",
+       "sexta-feira, 04/12",
+       "14:30"
+      ]
+     ]
+    }
+   },
+   {
+    "type": "FOOTER",
+    "text": "Clínica Torricelli"
+   },
+   {
+    "type": "BUTTONS",
+    "buttons": [
+     {
+      "type": "URL",
+      "text": "Minha conta",
+      "url": "https://clinicatorricelli.com.br/?view=account"
+     }
+    ]
+   }
+  ]
+ }
+]
