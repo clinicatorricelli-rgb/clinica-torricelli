@@ -84,11 +84,12 @@ export function buildOwnerWhatsapp(job) {
 
 export async function sendOwnerWhatsapp(job, message, key, fetchImpl) { return sendTemplate(job.to, message, key, fetchImpl); }
 
-// Ritmo dos envios numa mesma rodada (pedido do usuário em 26/11, depois de um 429 quando o
-// aviso da Eduarda e a confirmação da cliente saíram no mesmo segundo): espera `gapMs` entre
-// um envio e outro e, se passar de `budgetMs`, deixa o resto para a rodada seguinte (1 min),
-// para a chamada do cron (limite de 15 s) não estourar.
-export function createPacer({gapMs = 2000, budgetMs = 8000, clock = () => Date.now(), sleep = ms => new Promise(r => setTimeout(r, ms))} = {}) {
+// Ritmo dos envios numa mesma rodada. A 360dialog desta conta recusa chamadas muito próximas
+// (429 "Too many requests. Please retry in 2 seconds", visto em 27/11); com 2 s a segunda
+// mensagem da rodada ainda era recusada. Espera `gapMs` (4 s) entre um envio e outro e, se
+// passar de `budgetMs`, deixa o resto para a rodada seguinte (1 min), para a chamada do cron
+// (limite de 15 s) não estourar: cabem 3 mensagens por rodada.
+export function createPacer({gapMs = 4000, budgetMs = 8000, clock = () => Date.now(), sleep = ms => new Promise(r => setTimeout(r, ms))} = {}) {
  const start = clock();
  let last = null;
  return {
