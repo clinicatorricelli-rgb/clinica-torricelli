@@ -1,6 +1,7 @@
-// Mensagens de WhatsApp para as clientes (só para quem aceitou): confirmação ao agendar e
-// lembretes 27 h, 2 h e 20 min antes. Quando enviar e para quem vem do banco
-// (private.prepare_client_whatsapp); aqui só se monta o modelo aprovado e se envia.
+// Mensagens de WhatsApp para as clientes (só para quem aceitou): confirmação ao agendar,
+// lembretes 27 h, 2 h e 20 min antes e, com changes_enabled, remarcação e cancelamento.
+// Quando enviar e para quem vem do banco (private.prepare_client_whatsapp); aqui só se monta
+// o modelo aprovado e se envia.
 import {sendTemplate} from './owner-whatsapp.mjs';
 
 export const CLIENT_TEMPLATES = {
@@ -8,6 +9,9 @@ export const CLIENT_TEMPLATES = {
  reminder_27h: 'clinica_lembrete_27h',
  reminder_2h: 'clinica_lembrete_2h',
  reminder_20m: 'clinica_lembrete_20min',
+ rescheduled: 'clinica_remarcacao_cliente',
+ cancelled_client: 'clinica_cancelamento_cliente',
+ cancelled_clinic: 'clinica_cancelamento_clinica',
 };
 const tz = 'America/Sao_Paulo';
 const UUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
@@ -20,8 +24,12 @@ const firstName = n => String(n || '').trim().split(/\s+/)[0] || 'tudo bem';
 export function buildClientWhatsapp(job) {
  if (!job || !UUID.test(job.id || '') || !PHONE.test(job.to || '') || !CLIENT_TEMPLATES[job.kind] || !job.facts || Number.isNaN(Date.parse(job.facts.starts_at))) throw new Error('invalid_private_job');
  const f = job.facts, name = clean(firstName(f.customer_name), 60), service = clean(f.service_name);
+ const full = [name, service, clean(dayText(f.starts_at)), time(f.starts_at)];
  const params = {
-  confirmation: [name, service, clean(dayText(f.starts_at)), time(f.starts_at)],
+  confirmation: full,
+  rescheduled: full,
+  cancelled_client: full,
+  cancelled_clinic: full,
   reminder_27h: [name, service, clean(dayText(f.starts_at)), time(f.starts_at)],
   reminder_2h: [name, service, time(f.starts_at)],
   reminder_20m: [name, time(f.starts_at)],

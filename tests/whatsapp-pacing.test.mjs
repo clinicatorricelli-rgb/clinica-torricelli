@@ -6,18 +6,18 @@ import {processClientWhatsapp} from '../supabase/functions/_shared/client-whatsa
 
 function fakeTime(){let now=0;const sleeps=[];return {clock:()=>now,sleep:async ms=>{sleeps.push(ms);now+=ms;},advance:ms=>{now+=ms;},sleeps};}
 
-test('ritmo: 2 s entre envios e o resto fica para a próxima rodada',async()=>{
+test('ritmo: 4 s entre envios (padrão) e o resto fica para a próxima rodada',async()=>{
  const t=fakeTime(),p=createPacer({clock:t.clock,sleep:t.sleep});
  assert.equal(p.fits(),true);await p.ready();assert.deepEqual(t.sleeps,[],'o primeiro envio não espera');
  p.sent();t.advance(300);
- assert.equal(p.fits(),true);await p.ready();assert.deepEqual(t.sleeps,[1700],'espera só o que falta para 2 s');
- p.sent();t.advance(5000);
- assert.equal(p.fits(),true);await p.ready();assert.deepEqual(t.sleeps,[1700],'se já passaram 2 s, não espera');
+ assert.equal(p.fits(),true);await p.ready();assert.deepEqual(t.sleeps,[3700],'espera só o que falta para 4 s');
+ p.sent();t.advance(4000);
+ assert.equal(p.fits(),true);await p.ready();assert.deepEqual(t.sleeps,[3700],'se já passaram 4 s, não espera');
  p.sent();
  assert.equal(p.fits(),false,'passaria de 8 s: fica para a rodada seguinte');
 });
 
-test('aviso da Eduarda e confirmação da cliente na mesma rodada saem com 2 s de intervalo',async()=>{
+test('aviso da Eduarda e confirmação da cliente na mesma rodada saem com 4 s de intervalo',async()=>{
  const t=fakeTime(),pacer=createPacer({clock:t.clock,sleep:t.sleep}),sentAt=[];
  const id1='11111111-1111-4111-8111-111111111111',id2='22222222-2222-4222-8222-222222222222';
  const facts={customer_name:'Ana Fictícia',service_name:'Lash Lifting',starts_at:'2026-12-04T17:30:00Z'};
@@ -28,7 +28,7 @@ test('aviso da Eduarda e confirmação da cliente na mesma rodada saem com 2 s d
  const fetchImpl=async()=>{sentAt.push(t.clock());return new Response(JSON.stringify({messages:[{id:'wamid.F'}]}),{status:200});};
  assert.equal(await processOwnerWhatsapp({db,whatsappKey:'k',fetchImpl,pacer}),'accepted');
  assert.equal(await processClientWhatsapp({db,whatsappKey:'k',fetchImpl,pacer}),'accepted');
- assert.deepEqual(sentAt,[0,2000]);
+ assert.deepEqual(sentAt,[0,4000]);
 });
 
 test('sem tempo na rodada, a mensagem nem é preparada (não perde tentativa)',async()=>{
@@ -71,5 +71,5 @@ test('na rodada do cron, a mensagem da cliente sai antes do aviso da Eduarda',as
  const res=await handler(new Request('https://fixture.supabase.co/functions/v1/availability-email',{method:'POST',headers:{authorization:`Bearer ${secret}`},body:'{}'}));
  assert.equal(res.status,200);
  assert.deepEqual(order,['clinica_confirmacao_cliente','clinica_aviso_agenda_v2']);
- assert.deepEqual(t.sleeps,[2000]);
+ assert.deepEqual(t.sleeps,[4000]);
 });
