@@ -100,12 +100,14 @@ async function sendEmail(job, payload, key, fetchImpl) {
   }
 }
 
-export function createAvailabilityEmailHandler({db, fetchImpl = fetch, cronSecret, resendKey, supabaseUrl, webhookHandler, whatsappKey, whatsappPacing = {}}) {
+export function createAvailabilityEmailHandler({db, fetchImpl = fetch, cronSecret, resendKey, supabaseUrl, webhookHandler, whatsappKey, whatsappPacing = {}, whatsappStatusHandler}) {
   return async function handle(request) {
     let corsHeaders = {};
     try {
       const url = new URL(request.url);
       if(url.pathname.endsWith('/webhook')) return webhookHandler ? await webhookHandler(request) : json({error:'webhook_not_configured'},503);
+      // Retorno de status do WhatsApp (entregue/lida/falhou), vindo da 360dialog.
+      if(url.pathname.endsWith('/whatsapp-status')) return whatsappStatusHandler ? await whatsappStatusHandler(request) : json({error:'webhook_not_configured'},503);
       if (url.pathname.endsWith('/unsubscribe')) {
         const origin=request.headers.get('origin');
         if(origin && !ALLOWED_ORIGINS.has(origin)) return json({error:'origin_not_allowed'},403);

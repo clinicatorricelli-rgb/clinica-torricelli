@@ -127,3 +127,31 @@ test('textos: variáveis certas para cada modelo e formato novo da Eduarda',asyn
  assert.deepEqual(alert,{template:'clinica_aviso_agenda_v2',params:['Boa tarde','Novo agendamento','Bia','Brow Lamination','26/11 às 11:00']});
  assert.equal(buildOwnerWhatsappV2({id,to,kind:'booked',facts:{customer_name:'B',service_name:'S',starts_at:'2026-11-26T14:00:00Z'}},new Date('2026-11-25T10:00:00Z')).params[0],'Bom dia');
 });
+
+test('retorno de status: segredo conferido no banco, status só avança, motivo da recusa não se perde',async()=>{
+ const f=await fixture();try{
+  await f.as(f.ana,()=>f.rpc('public.set_whatsapp_consent($1)',[true]));
+  const b=(await f.book(f.at('14:00'))).appointment;assert.ok(b?.id);
+  await f.pg.query("update private.client_whatsapp_messages set status='sent',provider_id='wamid.TESTE1' where appointment_id=$1 and kind='confirmation'",[b.id]);
+  const rec=(secret,list)=>q(f,'select private.record_whatsapp_statuses($1,$2::jsonb) n',[secret,JSON.stringify(list)]).then(r=>r[0].n);
+  const st=async()=>(await q(f,"select delivery_status s,delivery_code c from private.client_whatsapp_messages where provider_id='wamid.TESTE1'"))[0];
+  const SECRET='segredo-ficticio-de-teste-0123456789abcdef';
+  assert.equal(await rec(SECRET,[{id:'wamid.TESTE1',status:'delivered'}]),-1,'sem segredo configurado, nada é gravado');
+  await f.pg.query("update private.whatsapp_webhook_settings set secret_sha256=encode(sha256(convert_to($1,'utf8')),'hex')",[SECRET]);
+  assert.equal(await rec('outro-segredo-qualquer-0123456789abcdef',[{id:'wamid.TESTE1',status:'delivered'}]),-2);
+  assert.equal((await st()).s,null);
+  assert.equal(await rec(SECRET,[{id:'wamid.TESTE1',status:'delivered',at:'2026-11-26T21:40:10Z',code:null},{id:'wamid.DESCONHECIDO',status:'read'}]),1);
+  assert.deepEqual(await st(),{s:'delivered',c:null});
+  assert.equal(await rec(SECRET,[{id:'wamid.TESTE1',status:'sent'}]),0,'status atrasado não desfaz o mais novo');
+  assert.equal(await rec(SECRET,[{id:'wamid.TESTE1',status:'read'}]),1);
+  assert.equal(await rec(SECRET,[{id:'wamid.TESTE1',status:'failed',code:'131026'},{id:'wamid.TESTE1',status:'bogus'}]),1);
+  assert.deepEqual(await st(),{s:'failed',c:131026});
+  // Mensagem com recusa do provedor descartada por remarcação: o motivo fica junto.
+  await f.pg.query("update private.client_whatsapp_messages set last_code='http_429_130429' where appointment_id=$1 and kind='reminder_2h' and status='pending'",[b.id]);
+  await f.as(f.ana,()=>f.rpc('public.reschedule_appointment($1,$2)',[b.id,f.at('17:00')]));
+  assert.equal((await q(f,"select last_code from private.client_whatsapp_messages where appointment_id=$1 and kind='reminder_2h' and status='cancelled'",[b.id]))[0].last_code,'http_429_130429;appointment_changed');
+  // Ninguém além do servidor chama a função.
+  await f.pg.exec('set role authenticated');await assert.rejects(f.pg.query("select private.record_whatsapp_statuses('x','[]'::jsonb)"),/permission denied/);await f.pg.exec('reset role');
+  assert.equal((await q(f,"select count(*)::int n from pg_tables where schemaname='private' and tablename='whatsapp_webhook_settings' and rowsecurity"))[0].n,1);
+ }finally{await f.pg.close();}
+});

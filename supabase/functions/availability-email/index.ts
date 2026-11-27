@@ -1,6 +1,7 @@
 import postgres from 'npm:postgres@3.4.7';
 import { createAvailabilityEmailHandler } from '../_shared/availability-email.mjs';
 import { createResendWebhookHandler } from '../_shared/resend-webhook.mjs';
+import { createWhatsappStatusHandler } from '../_shared/whatsapp-status.mjs';
 
 // Server-only configuration. No request can choose a recipient or message.
 const connection = Deno.env.get('SUPABASE_DB_URL');
@@ -103,6 +104,15 @@ const webhookHandler=createResendWebhookHandler({
   },
 });
 
+// Retorno de status do WhatsApp: o banco confere o segredo e grava só status, erro e hora.
+const whatsappStatusHandler = createWhatsappStatusHandler({
+  async record(secret: string, statuses: unknown[]) {
+    if (!sql) throw new Error('database_not_configured');
+    const [row] = await sql`select private.record_whatsapp_statuses(${secret}::text, ${sql.json(statuses)}) as n`;
+    return row.n;
+  },
+});
+
 Deno.serve(createAvailabilityEmailHandler({
   db,
   cronSecret: Deno.env.get('AVAILABILITY_CRON_SECRET'),
@@ -110,4 +120,5 @@ Deno.serve(createAvailabilityEmailHandler({
   whatsappKey: Deno.env.get('WHATSAPP_360_API_KEY'),
   supabaseUrl: Deno.env.get('SUPABASE_URL'),
   webhookHandler,
+  whatsappStatusHandler,
 }));
