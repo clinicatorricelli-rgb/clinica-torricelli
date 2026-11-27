@@ -204,3 +204,26 @@ test('modelos de remarcação e cancelamento: nomes e 4 variáveis, iguais aos e
   assert.equal(def.category,'UTILITY');
  }
 });
+
+test('falta na agenda paralela: pode cobrar a taxa (30% do serviço) e ela aparece em aberto',async()=>{
+ const f=await fixture();try{
+  const svc=(await q(f,'select id,price_cents from public.services where id=1'))[0];
+  const start=new Date(Date.now()-3*3600e3).toISOString(),end=new Date(Date.now()-2*3600e3).toISOString();
+  const r=await f.as(f.admin,()=>f.rpc('public.admin_save_manual_appointment_v2($1,$2,$3,$4,$5,$6,$7,$8)',[null,svc.id,start,end,null,'Cliente Fictícia','+5511900000003',null]),'aal2');
+  assert.equal(r.ok,true,JSON.stringify(r));
+  const m=await f.as(f.admin,()=>f.rpc('public.admin_mark_attendance($1,$2,$3)',[r.id,'no_show_fee',null]),'aal2');
+  assert.deepEqual([m.ok,m.status,m.fee_status],[true,'no_show','confirmed']);
+  const fee=(await q(f,'select customer_id,amount_cents,status,reason from public.appointment_fees where appointment_id=$1',[r.id]))[0];
+  assert.deepEqual(fee,{customer_id:null,amount_cents:Math.floor((svc.price_cents*30+50)/100),status:'confirmed',reason:'no_show'});
+  const today=new Date().toISOString().slice(0,10);
+  const ov=await f.as(f.admin,()=>f.rpc('public.admin_booking_overview($1,$2)',[today,today]),'aal2');
+  const open=ov.open_fees.find(x=>x.appointment.id===r.id);
+  assert.ok(open,'taxa da agenda paralela aparece em Taxas em aberto');
+  assert.equal(open.customer.name,'Cliente Fictícia');assert.equal(open.source,'manual');
+  // Falta sem cobrar na agenda paralela: nenhuma taxa é criada.
+  const r2=await f.as(f.admin,()=>f.rpc('public.admin_save_manual_appointment_v2($1,$2,$3,$4,$5,$6,$7,$8)',[null,svc.id,new Date(Date.now()-6*3600e3).toISOString(),new Date(Date.now()-5*3600e3).toISOString(),null,'Outra Fictícia',null,null]),'aal2');
+  const w=await f.as(f.admin,()=>f.rpc('public.admin_mark_attendance($1,$2,$3)',[r2.id,'no_show_waived','Avisou que estava doente']),'aal2');
+  assert.equal(w.ok,true);
+  assert.equal((await q(f,'select count(*)::int n from public.appointment_fees where appointment_id=$1',[r2.id]))[0].n,0);
+ }finally{await f.pg.close();}
+});

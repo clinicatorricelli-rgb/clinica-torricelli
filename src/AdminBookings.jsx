@@ -1,4 +1,4 @@
-import React,{useEffect,useState} from 'react';import {supabase} from './supabase';import {money} from './catalog.mjs';
+import React,{useEffect,useState} from 'react';import {supabase} from './supabase';import {money,lateFee} from './catalog.mjs';
 import {when,clock,todayInClinic,addDays,statusLabel,feeLabel,duration} from './booking.mjs';
 const noticeOptions=[0,60,120,180,240,360,720,1440,2880];
 
@@ -12,7 +12,7 @@ const whatsapp=phone=>phone?`https://wa.me/${phone.replace(/\D/g,'')}`:null;
 const titles={settings:'Agendamento online',fees:'Taxas e presença',upcoming:'Próximos agendamentos'};
 export default function AdminBookings({view='upcoming'}){
  const [data,setData]=useState(null),[failed,setFailed]=useState(false),[reload,setReload]=useState(0),[busy,setBusy]=useState(false),[message,setMessage]=useState('');
- const [pending,setPending]=useState(null),[note,setNote]=useState(''),[limits,setLimits]=useState(null);
+ const [pending,setPending]=useState(null),[absent,setAbsent]=useState(null),[note,setNote]=useState(''),[limits,setLimits]=useState(null);
  useEffect(()=>{let alive=true;const today=todayInClinic();
   supabase.rpc('admin_booking_overview',{p_from:addDays(today,-14),p_until:addDays(today,45)}).then(({data,error})=>{if(!alive)return;if(error){setFailed(true);return;}setFailed(false);setData(data);});
   return()=>{alive=false;};
@@ -59,18 +59,22 @@ export default function AdminBookings({view='upcoming'}){
   <p>{customer(f.customer)} · {f.appointment.service.name} · {f.appointment.service.variant} · {when(f.appointment.starts_at)}</p>
   {f.status==='proposed'?<div className="actions"><button disabled={busy} onClick={()=>ask({key:`${f.id}:confirm`,fn:'admin_decide_fee',args:n=>({p_fee_id:f.id,p_decision:'confirm',p_note:n}),label:'Confirmar taxa',done:'Taxa confirmada. A cliente fica sem poder agendar até a baixa.'})}>Confirmar taxa</button>
    <button disabled={busy} onClick={()=>ask({key:`${f.id}:waive`,fn:'admin_decide_fee',args:n=>({p_fee_id:f.id,p_decision:'waive',p_note:n}),label:'Dispensar taxa',done:'Taxa dispensada.'})}>Dispensar</button></div>
-  :<div className="actions"><button disabled={busy} onClick={()=>ask({key:`${f.id}:settle`,fn:'admin_settle_fee',args:n=>({p_fee_id:f.id,p_note:n}),label:'Dar baixa',warning:'Dê baixa só depois de ver o valor no extrato do banco. Comprovante enviado pela cliente não basta.',done:'Baixa registrada. A cliente pode agendar de novo.'})}>Dar baixa (conferi o extrato)</button>
-   <button disabled={busy} onClick={()=>ask({key:`${f.id}:waive`,fn:'admin_decide_fee',args:n=>({p_fee_id:f.id,p_decision:'waive',p_note:n}),label:'Dispensar taxa',done:'Taxa dispensada. A cliente pode agendar de novo.'})}>Dispensar</button></div>}
+  :<div className="actions"><button disabled={busy} onClick={()=>ask({key:`${f.id}:settle`,fn:'admin_settle_fee',args:n=>({p_fee_id:f.id,p_note:n}),label:'Dar baixa',warning:'Dê baixa só depois de ver o valor no extrato do banco. Comprovante enviado pela cliente não basta.',done:f.source==='manual'?'Baixa registrada.':'Baixa registrada. A cliente pode agendar de novo.'})}>Dar baixa (conferi o extrato)</button>
+   <button disabled={busy} onClick={()=>ask({key:`${f.id}:waive`,fn:'admin_decide_fee',args:n=>({p_fee_id:f.id,p_decision:'waive',p_note:n}),label:'Dispensar taxa',done:f.source==='manual'?'Taxa dispensada.':'Taxa dispensada. A cliente pode agendar de novo.'})}>Dispensar</button></div>}
   {[`${f.id}:confirm`,`${f.id}:waive`,`${f.id}:settle`].map(k=><React.Fragment key={k}>{box(k)}</React.Fragment>)}
  </article>):<p>Nenhuma taxa em aberto.</p>}
  <h3>Marcar presença</h3>
- {toMark.length?toMark.map(i=><article className="availability-change" key={i.id}>
-  <strong>{when(i.starts_at)} · {i.service.name}{i.service.variant?` · ${i.service.variant}`:''}</strong><p>{customer(i.customer)} · taxa possível: {money(i.fee_cents)}</p>
-  <div className="actions"><button disabled={busy} onClick={()=>mark(i,'completed','Confirmar presença','Presença registrada.')}>Compareceu</button>
-   {i.source!=='manual'&&<button disabled={busy} onClick={()=>mark(i,'no_show_fee','Registrar falta e cobrar','Falta registrada e taxa confirmada.')}>Faltou: cobrar taxa</button>}
-   <button disabled={busy} onClick={()=>mark(i,'no_show_waived','Registrar falta sem taxa','Falta registrada sem taxa.',true)}>Faltou: dispensar taxa</button></div>
+ {toMark.length?toMark.map(i=>{const fee=i.fee_cents||lateFee(i.price_cents||0);const manual=i.source==='manual';return <article className="availability-change" key={i.id}>
+  <strong>{when(i.starts_at)} · {i.service.name}{i.service.variant?` · ${i.service.variant}`:''}</strong><p>{customer(i.customer)}{manual?' · agenda paralela':''}</p>
+  <div className="actions"><button disabled={busy} onClick={()=>{setAbsent(null);mark(i,'completed','Confirmar presença','Presença registrada.');}}>Compareceu</button>
+   <button disabled={busy} aria-expanded={absent===i.id} onClick={()=>{setPending(null);setAbsent(a=>a===i.id?null:i.id);}}>Faltou</button></div>
+  {absent===i.id&&!pending&&<div className="confirm-box" role="group" aria-label="Falta: cobrar taxa?">
+   <p>Cobrar a taxa de falta de <strong>{money(fee)}</strong> (30% do serviço)?</p>
+   {manual&&<p className="account-details-hint">Cliente da agenda paralela: a taxa fica em "Taxas em aberto" para você cobrar e dar baixa. Como ela não tem conta, o site não bloqueia novos horários dela.</p>}
+   <div className="actions"><button className="primary" disabled={busy||!fee} onClick={()=>mark(i,'no_show_fee','Registrar falta e cobrar',manual?'Falta registrada. A taxa está em "Taxas em aberto".':'Falta registrada e taxa confirmada.')}>Cobrar taxa</button>
+    <button disabled={busy} onClick={()=>mark(i,'no_show_waived','Registrar falta sem taxa','Falta registrada sem taxa.',true)}>Não cobrar</button></div></div>}
   {['completed','no_show_fee','no_show_waived'].map(o=><React.Fragment key={o}>{box(`${i.id}:${o}`)}</React.Fragment>)}
- </article>):<p>Nenhum atendimento passado esperando marcação.</p>}</>}
+ </article>;}):<p>Nenhum atendimento passado esperando marcação.</p>}</>}
  {view==='upcoming'&&<>
  {upcoming.length?upcoming.map(i=><article className="availability-change" key={i.id}>
   <strong>{when(i.starts_at)}–{clock(i.ends_at)} · {i.service.name}{i.service.variant?` · ${i.service.variant}`:''}</strong>
