@@ -84,6 +84,32 @@ export function buildOwnerWhatsapp(job) {
 
 export async function sendOwnerWhatsapp(job, message, key, fetchImpl) { return sendTemplate(job.to, message, key, fetchImpl); }
 
+// Ritmo dos envios numa mesma rodada (pedido do usuário em 26/11, depois de um 429 quando o
+// aviso da Eduarda e a confirmação da cliente saíram no mesmo segundo): espera `gapMs` entre
+// um envio e outro e, se passar de `budgetMs`, deixa o resto para a rodada seguinte (1 min),
+// para a chamada do cron (limite de 15 s) não estourar.
+export function createPacer({gapMs = 2000, budgetMs = 8000, clock = () => Date.now(), sleep = ms => new Promise(r => setTimeout(r, ms))} = {}) {
+ const start = clock();
+ let last = null;
+ return {
+  async ready() {
+   const wait = last === null ? 0 : Math.max(0, last + gapMs - clock());
+   if (clock() + wait - start > budgetMs) return false;
+   if (wait) await sleep(wait);
+   return true;
+  },
+  sent() { last = clock(); },
+ };
+}
+
+// Só o número do erro (ex.: 130429 da Meta); o texto pode conter telefone e não é copiado.
+async function providerErrorCode(response) {
+ const body = await response.json().catch(() => null);
+ const raw = body?.error?.code ?? body?.errors?.[0]?.code ?? body?.meta?.code;
+ const code = Number(raw);
+ return Number.isInteger(code) && code > 0 && code < 10_000_000 ? `_${code}` : '';
+}
+
 // Envio de um modelo aprovado pela 360dialog (API oficial do WhatsApp).
 export async function sendTemplate(to, message, key, fetchImpl) {
  const body = {
@@ -92,8 +118,8 @@ export async function sendTemplate(to, message, key, fetchImpl) {
  };
  try {
   const response = await fetchImpl(API, {method: 'POST', headers: {'D360-API-KEY': key, 'Content-Type': 'application/json'}, body: JSON.stringify(body), signal: AbortSignal.timeout(8000)});
-  // Não copiar o corpo da resposta: pode conter números de telefone.
-  if (!response.ok) return {outcome: response.status === 429 || response.status >= 500 ? 'retry' : 'failed', providerId: null, code: `http_${response.status}`};
+  // Não copiar o corpo da resposta: pode conter números de telefone. Só o número do erro.
+  if (!response.ok) return {outcome: response.status === 429 || response.status >= 500 ? 'retry' : 'failed', providerId: null, code: `http_${response.status}${await providerErrorCode(response)}`};
   const result = await response.json().catch(() => null);
   const id = result?.messages?.[0]?.id;
   if (typeof id !== 'string' || id.length > 200) return {outcome: 'retry', providerId: null, code: 'invalid_provider_response'};
@@ -104,18 +130,20 @@ export async function sendTemplate(to, message, key, fetchImpl) {
 }
 
 // Até `limit` alertas por chamada. Sem a chave da 360dialog, nada é consumido da fila.
-export async function processOwnerWhatsapp({db, whatsappKey, fetchImpl = fetch, limit = 3, templates = 'v2', now = () => new Date()}) {
+export async function processOwnerWhatsapp({db, whatsappKey, fetchImpl = fetch, limit = 3, templates = 'v2', now = () => new Date(), pacer = null}) {
  await db.markOwnerWhatsappProvider(Boolean(whatsappKey));
  if (!whatsappKey) return 'provider_not_configured';
  await db.enqueueOwnerDailyWhatsapp();
  let last = 'idle';
  for (let i = 0; i < limit; i++) {
+  if (pacer && !(await pacer.ready())) break;
   const job = await db.prepareOwnerWhatsapp();
   if (!job) break;
   if (job.skip) { last = 'skipped'; continue; }
   let message;
   try { message = templates === 'v2' ? buildOwnerWhatsappV2(job, now()) : buildOwnerWhatsapp(job); } catch { await db.finishOwnerWhatsapp(job.id, 'failed', null, 'invalid_private_job'); last = 'failed'; continue; }
   const result = await sendOwnerWhatsapp(job, message, whatsappKey, fetchImpl);
+  pacer?.sent();
   await db.finishOwnerWhatsapp(job.id, result.outcome, result.providerId, result.code);
   last = result.outcome;
   if (result.outcome !== 'accepted') break;
