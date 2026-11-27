@@ -33,12 +33,13 @@ export async function processClientWhatsapp({db, whatsappKey, fetchImpl = fetch,
  if (!whatsappKey) return 'provider_not_configured';
  let last = 'idle';
  for (let i = 0; i < limit; i++) {
-  if (pacer && !(await pacer.ready())) break;
+  if (pacer && !pacer.fits()) break;
   const job = await db.prepareClientWhatsapp();
   if (!job) break;
   if (job.skip) { last = 'skipped'; continue; }
   let message;
   try { message = buildClientWhatsapp(job); } catch { await db.finishClientWhatsapp(job.id, 'failed', null, 'invalid_private_job'); last = 'failed'; continue; }
+  await pacer?.ready();
   const result = await sendTemplate(job.to, message, whatsappKey, fetchImpl);
   pacer?.sent();
   await db.finishClientWhatsapp(job.id, result.outcome, result.providerId, result.code);

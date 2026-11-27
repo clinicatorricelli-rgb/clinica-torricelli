@@ -120,5 +120,5 @@ test('mensagens: modelo certo, variáveis sem quebra de linha e envio pela 360di
  assert.deepEqual(done,[[id,'accepted','wamid.FICTICIO',null]]);
  const done2=[];const db2={...db,prepareOwnerWhatsapp:async()=>done2.length?null:{id,kind:'booked',to:OWNER,facts:{customer_name:'Ana',service_name:'S',starts_at:'2026-12-01T17:00:00Z'}},finishOwnerWhatsapp:async(...a)=>done2.push(a)};
  assert.equal(await processOwnerWhatsapp({db:db2,whatsappKey:'k',fetchImpl:async()=>new Response('{"error":"telefone 5511..."}',{status:400})}),'failed');
- assert.deepEqual(done2[0].slice(1),['failed',null,'http_400'],'erro do provedor não é copiado');
+ assert.deepEqual(done2[0].slice(1),['failed',null,'http_400:telefone'],'do erro do provedor só fica texto curto, sem algarismos');
 });

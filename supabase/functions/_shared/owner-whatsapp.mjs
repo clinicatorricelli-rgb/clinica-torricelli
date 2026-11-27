@@ -92,22 +92,31 @@ export function createPacer({gapMs = 2000, budgetMs = 8000, clock = () => Date.n
  const start = clock();
  let last = null;
  return {
+  // Cabe mais um envio nesta rodada? (perguntado antes de preparar a mensagem, para não gastar tentativa)
+  fits() {
+   const wait = last === null ? 0 : Math.max(0, last + gapMs - clock());
+   return clock() + wait - start <= budgetMs;
+  },
+  // Espera o intervalo, só quando já há uma mensagem para enviar.
   async ready() {
    const wait = last === null ? 0 : Math.max(0, last + gapMs - clock());
-   if (clock() + wait - start > budgetMs) return false;
    if (wait) await sleep(wait);
-   return true;
   },
   sent() { last = clock(); },
  };
 }
 
-// Só o número do erro (ex.: 130429 da Meta); o texto pode conter telefone e não é copiado.
+// Motivo da recusa: o número do erro (ex.: 130429 da Meta) ou, sem número, um texto curto sem
+// nenhum algarismo (o texto original pode conter telefone), ex.: "http_429:api_rate_limit_exceeded".
+const reasonText = v => String(v ?? '').toLowerCase().normalize('NFD').replace(/[^a-z .:_-]+/g, ' ').trim().replace(/[\s.:-]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 60);
 async function providerErrorCode(response) {
- const body = await response.json().catch(() => null);
- const raw = body?.error?.code ?? body?.errors?.[0]?.code ?? body?.meta?.code;
- const code = Number(raw);
- return Number.isInteger(code) && code > 0 && code < 10_000_000 ? `_${code}` : '';
+ const raw = await response.text().catch(() => '');
+ let body = null;
+ try { body = JSON.parse(raw); } catch { body = null; }
+ const code = Number(body?.error?.code ?? body?.errors?.[0]?.code ?? body?.meta?.code);
+ if (Number.isInteger(code) && code > 0 && code < 10_000_000) return `_${code}`;
+ const text = reasonText(body ? (body.error?.message ?? body.error?.title ?? body.errors?.[0]?.title ?? body.meta?.developer_message ?? body.message ?? body.detail ?? (typeof body.error === 'string' ? body.error : '')) : raw.trim().startsWith('<') ? '' : raw.slice(0, 200));
+ return text ? `:${text}` : '';
 }
 
 // Envio de um modelo aprovado pela 360dialog (API oficial do WhatsApp).
@@ -136,12 +145,13 @@ export async function processOwnerWhatsapp({db, whatsappKey, fetchImpl = fetch, 
  await db.enqueueOwnerDailyWhatsapp();
  let last = 'idle';
  for (let i = 0; i < limit; i++) {
-  if (pacer && !(await pacer.ready())) break;
+  if (pacer && !pacer.fits()) break;
   const job = await db.prepareOwnerWhatsapp();
   if (!job) break;
   if (job.skip) { last = 'skipped'; continue; }
   let message;
   try { message = templates === 'v2' ? buildOwnerWhatsappV2(job, now()) : buildOwnerWhatsapp(job); } catch { await db.finishOwnerWhatsapp(job.id, 'failed', null, 'invalid_private_job'); last = 'failed'; continue; }
+  await pacer?.ready();
   const result = await sendOwnerWhatsapp(job, message, whatsappKey, fetchImpl);
   pacer?.sent();
   await db.finishOwnerWhatsapp(job.id, result.outcome, result.providerId, result.code);

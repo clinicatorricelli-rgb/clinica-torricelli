@@ -159,17 +159,18 @@ export function createAvailabilityEmailHandler({db, fetchImpl = fetch, cronSecre
       if (typeof db.prepareDailyAgenda === 'function') {
         try { daily = await processDailyAgenda({db, resendKey, fetchImpl}); } catch { daily = 'temporarily_unavailable'; }
       }
-      // Alertas da Eduarda no WhatsApp: isolados, como os e-mails acima. Um só ritmo para
-      // os envios da Eduarda e das clientes: 2 s entre um e outro.
+      // WhatsApp: primeiro a cliente (confirmação e lembretes), depois os alertas da Eduarda
+      // (pedido do usuário em 26/11: a segunda mensagem da rodada costuma levar 429 e voltar 2 min
+      // depois; melhor que quem espere seja a Eduarda). Um só ritmo, 2 s entre um envio e outro;
+      // cada parte isolada, como os e-mails acima.
       const pacer = createPacer(whatsappPacing);
-      let whatsapp;
-      if (typeof db.prepareOwnerWhatsapp === 'function') {
-        try { whatsapp = await processOwnerWhatsapp({db, whatsappKey, fetchImpl, pacer}); } catch { whatsapp = 'temporarily_unavailable'; }
-      }
-      // Mensagens às clientes (confirmação e lembretes), também isoladas.
       let clientWhatsapp;
       if (typeof db.prepareClientWhatsapp === 'function') {
         try { clientWhatsapp = await processClientWhatsapp({db, whatsappKey, fetchImpl, pacer}); } catch { clientWhatsapp = 'temporarily_unavailable'; }
+      }
+      let whatsapp;
+      if (typeof db.prepareOwnerWhatsapp === 'function') {
+        try { whatsapp = await processOwnerWhatsapp({db, whatsappKey, fetchImpl, pacer}); } catch { whatsapp = 'temporarily_unavailable'; }
       }
       const withBooking = status => json({status, ...(booking === undefined ? {} : {booking}), ...(daily === undefined ? {} : {daily}), ...(whatsapp === undefined ? {} : {whatsapp}), ...(clientWhatsapp === undefined ? {} : {clientWhatsapp})});
       // Enqueue commits before preparation: publication materialization can
